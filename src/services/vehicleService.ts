@@ -5,6 +5,7 @@ export interface Vehicle {
   workshop_id: string;
   customer_id: string;
   slug: string;
+  qr_slug: string;
   registration_number: string;
   vin?: string;
   make: string;
@@ -98,7 +99,7 @@ export async function getVehicle(id: string) {
   return data as unknown as VehicleWithCustomer & { customer: { email?: string; address?: string; notes?: string } };
 }
 
-export async function createVehicle(vehicle: Omit<Vehicle, "id" | "slug" | "created_at" | "updated_at" | "workshop_id">) {
+export async function createVehicle(vehicle: Omit<Vehicle, "id" | "slug" | "qr_slug" | "created_at" | "updated_at" | "workshop_id">) {
   const workshopId = await getUserWorkshopId();
   let slug = generateSlug();
 
@@ -111,7 +112,7 @@ export async function createVehicle(vehicle: Omit<Vehicle, "id" | "slug" | "crea
 
   const { data, error } = await supabase
     .from("vehicles")
-    .insert({ ...vehicle, workshop_id: workshopId, slug })
+    .insert({ ...vehicle, workshop_id: workshopId, slug, qr_slug: slug })
     .select()
     .single();
 

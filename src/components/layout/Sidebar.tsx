@@ -14,11 +14,10 @@ import { signOut } from "@/services/authService";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/vehicles", label: "Vehicles", icon: Car },
-  { href: "/services", label: "Services", icon: Wrench },
-  { href: "/qr-codes", label: "QR Codes", icon: QrCode },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/customers", label: "Customers", icon: Users },
+  { href: "/dashboard/vehicles", label: "Vehicles", icon: Car },
+  { href: "/dashboard/qr-codes", label: "QR Codes", icon: QrCode },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {

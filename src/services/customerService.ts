@@ -7,8 +7,34 @@ export interface Customer {
   email?: string;
   address?: string;
   notes?: string;
+  workshop_id: string;
   created_at: string;
   updated_at: string;
+}
+
+async function getUserWorkshopId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("workshops")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    // Create a default workshop if none exists
+    const { data: newWorkshop, error: createError } = await supabase
+      .from("workshops")
+      .insert({ name: "My Workshop", user_id: user.id })
+      .select("id")
+      .single();
+
+    if (createError) throw createError;
+    return newWorkshop.id;
+  }
+
+  return data.id;
 }
 
 export async function getCustomers(search?: string) {
@@ -39,10 +65,12 @@ export async function getCustomer(id: string) {
   return data as Customer;
 }
 
-export async function createCustomer(customer: Omit<Customer, "id" | "created_at" | "updated_at">) {
+export async function createCustomer(customer: Omit<Customer, "id" | "created_at" | "updated_at" | "workshop_id">) {
+  const workshopId = await getUserWorkshopId();
+
   const { data, error } = await supabase
     .from("customers")
-    .insert(customer)
+    .insert({ ...customer, workshop_id: workshopId })
     .select()
     .single();
 

@@ -1,6 +1,6 @@
 ---
 title: Customer Management
-status: todo
+status: in_progress
 priority: high
 type: feature
 tags: [customers, crud]
@@ -13,11 +13,11 @@ position: 3
 Full customer CRUD for the admin dashboard.
 
 ## Checklist
-- [ ] Create customers list page with search
-- [ ] Create customer detail/view page
-- [ ] Create customer add/edit form
-- [ ] Add delete with confirmation dialog
-- [ ] Link customers to their vehicles
+- [x] Create customers list page with search
+- [x] Create customer detail/view page
+- [x] Create customer add/edit form
+- [x] Add delete with confirmation dialog
+- [x] Link customers to their vehicles
 
 ## Acceptance
 - Admin can create, read, update, delete customers

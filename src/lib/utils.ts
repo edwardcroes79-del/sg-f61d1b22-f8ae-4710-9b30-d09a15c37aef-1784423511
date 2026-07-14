@@ -38,6 +38,8 @@ export function getServiceStatus(nextDate?: string | null, nextMileage?: number 
   daysRemaining: number | null;
   mileageRemaining: number | null;
   message: string;
+  color: string;
+  label: string;
 } {
   const days = nextDate ? daysUntil(nextDate) : null;
   const mileage = nextMileage && currentMileage ? nextMileage - currentMileage : null;
@@ -48,6 +50,8 @@ export function getServiceStatus(nextDate?: string | null, nextMileage?: number 
       daysRemaining: days,
       mileageRemaining: mileage,
       message: `Overdue by ${Math.abs(days)} days`,
+      color: "bg-danger/10 text-danger",
+      label: "Overdue",
     };
   }
 
@@ -57,6 +61,8 @@ export function getServiceStatus(nextDate?: string | null, nextMileage?: number 
       daysRemaining: days,
       mileageRemaining: mileage,
       message: days === 0 ? "Due today" : `Due in ${days} days`,
+      color: "bg-warning/10 text-warning",
+      label: "Due soon",
     };
   }
 
@@ -65,5 +71,7 @@ export function getServiceStatus(nextDate?: string | null, nextMileage?: number 
     daysRemaining: days,
     mileageRemaining: mileage,
     message: days !== null ? `${days} days remaining` : "No date set",
+    color: "bg-success/10 text-success",
+    label: "Upcoming",
   };
 }

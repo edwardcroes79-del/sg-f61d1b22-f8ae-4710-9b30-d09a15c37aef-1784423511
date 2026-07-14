@@ -202,6 +202,7 @@ export type Database = {
           next_service_mileage: number | null
           qr_slug: string
           registration_number: string
+          slug: string
           transmission: string | null
           updated_at: string | null
           vin: string | null
@@ -223,6 +224,7 @@ export type Database = {
           next_service_mileage?: number | null
           qr_slug: string
           registration_number: string
+          slug: string
           transmission?: string | null
           updated_at?: string | null
           vin?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           next_service_mileage?: number | null
           qr_slug?: string
           registration_number?: string
+          slug?: string
           transmission?: string | null
           updated_at?: string | null
           vin?: string | null

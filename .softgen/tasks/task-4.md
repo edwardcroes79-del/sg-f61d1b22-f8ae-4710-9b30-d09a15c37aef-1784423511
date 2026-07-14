@@ -1,6 +1,6 @@
 ---
 title: Vehicle Management & QR Codes
-status: todo
+status: in_progress
 priority: high
 type: feature
 tags: [vehicles, qr-code, crud]

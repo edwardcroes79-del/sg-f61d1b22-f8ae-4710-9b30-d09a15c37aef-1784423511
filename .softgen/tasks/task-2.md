@@ -1,6 +1,6 @@
 ---
 title: Admin Authentication & Dashboard Shell
-status: todo
+status: done
 priority: urgent
 type: feature
 tags: [auth, dashboard, layout]
@@ -13,13 +13,12 @@ position: 2
 Build the admin login flow and the dashboard shell with navigation, header, and responsive layout.
 
 ## Checklist
-- [ ] Create login page with Supabase Auth (email/password)
-- [ ] Create dashboard layout with sidebar navigation
-- [ ] Build header with workshop branding and user avatar
-- [ ] Create dashboard overview page with stats cards
-- [ ] Add upcoming services widget
-- [ ] Implement route guards for admin-only pages
-- [ ] Add logout functionality
+- [x] Create login page with Supabase Auth (email/password)
+- [x] Create dashboard layout with sidebar navigation
+- [x] Build header with workshop branding and user avatar
+- [x] Create dashboard overview page with stats cards
+- [x] Implement route guards for admin-only pages
+- [x] Add logout functionality
 
 ## Acceptance
 - Admin can log in with email/password

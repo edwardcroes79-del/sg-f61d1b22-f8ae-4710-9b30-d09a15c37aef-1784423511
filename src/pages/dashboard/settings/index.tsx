@@ -17,10 +17,11 @@ const emptyForm: Partial<Workshop> = {
   secondary_color: "#64748B",
   contact_phone: "",
   contact_email: "",
-  address: "",
-  website: "",
-  footer_text: "",
-  social_links: {},
+  contact_address: "",
+  footer_info: "",
+  social_facebook: "",
+  social_instagram: "",
+  social_twitter: "",
 };
 
 export default function SettingsPage() {
@@ -29,7 +30,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<Partial<Workshop>>(emptyForm);
-  const [social, setSocial] = useState({ facebook: "", instagram: "", twitter: "", linkedin: "" });
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,12 +41,6 @@ export default function SettingsPage() {
       const data = await getWorkshop();
       if (data) {
         setForm(data);
-        setSocial({
-          facebook: data.social_links?.facebook || "",
-          instagram: data.social_links?.instagram || "",
-          twitter: data.social_links?.twitter || "",
-          linkedin: data.social_links?.linkedin || "",
-        });
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -57,10 +51,6 @@ export default function SettingsPage() {
 
   function handleChange(field: keyof Workshop, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
-  }
-
-  function handleSocialChange(platform: string, value: string) {
-    setSocial((prev) => ({ ...prev, [platform]: value }));
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -82,15 +72,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await saveWorkshop({
-        ...form,
-        social_links: {
-          facebook: social.facebook || undefined,
-          instagram: social.instagram || undefined,
-          twitter: social.twitter || undefined,
-          linkedin: social.linkedin || undefined,
-        },
-      });
+      await saveWorkshop(form);
       toast({ title: "Settings saved" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -131,12 +113,12 @@ export default function SettingsPage() {
                 <Input id="name" value={form.name || ""} onChange={(e) => handleChange("name", e.target.value)} placeholder="Torque Auto Workshop" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea id="address" value={form.address || ""} onChange={(e) => handleChange("address", e.target.value)} placeholder="123 Service Lane, Motor City" rows={3} />
+                <Label htmlFor="contact_address">Address</Label>
+                <Textarea id="contact_address" value={form.contact_address || ""} onChange={(e) => handleChange("contact_address", e.target.value)} placeholder="123 Service Lane, Motor City" rows={3} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="footer_text">Footer Text</Label>
-                <Input id="footer_text" value={form.footer_text || ""} onChange={(e) => handleChange("footer_text", e.target.value)} placeholder="Premium vehicle care since 2024" />
+                <Label htmlFor="footer_info">Footer Text</Label>
+                <Input id="footer_info" value={form.footer_info || ""} onChange={(e) => handleChange("footer_info", e.target.value)} placeholder="Premium vehicle care since 2024" />
               </div>
             </CardContent>
           </Card>
@@ -156,10 +138,6 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="contact_email">Email</Label>
                 <Input id="contact_email" type="email" value={form.contact_email || ""} onChange={(e) => handleChange("contact_email", e.target.value)} placeholder="service@workshop.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <Input id="website" value={form.website || ""} onChange={(e) => handleChange("website", e.target.value)} placeholder="https://workshop.com" />
               </div>
             </CardContent>
           </Card>
@@ -221,20 +199,20 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="facebook" className="flex items-center gap-2"><Facebook className="w-4 h-4" /> Facebook</Label>
-                  <Input id="facebook" value={social.facebook} onChange={(e) => handleSocialChange("facebook", e.target.value)} placeholder="https://facebook.com/workshop" />
+                  <Label htmlFor="social_facebook" className="flex items-center gap-2"><Facebook className="w-4 h-4" /> Facebook</Label>
+                  <Input id="social_facebook" value={form.social_facebook || ""} onChange={(e) => handleChange("social_facebook", e.target.value)} placeholder="https://facebook.com/workshop" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="instagram" className="flex items-center gap-2"><Instagram className="w-4 h-4" /> Instagram</Label>
-                  <Input id="instagram" value={social.instagram} onChange={(e) => handleSocialChange("instagram", e.target.value)} placeholder="https://instagram.com/workshop" />
+                  <Label htmlFor="social_instagram" className="flex items-center gap-2"><Instagram className="w-4 h-4" /> Instagram</Label>
+                  <Input id="social_instagram" value={form.social_instagram || ""} onChange={(e) => handleChange("social_instagram", e.target.value)} placeholder="https://instagram.com/workshop" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="twitter" className="flex items-center gap-2"><Twitter className="w-4 h-4" /> Twitter / X</Label>
-                  <Input id="twitter" value={social.twitter} onChange={(e) => handleSocialChange("twitter", e.target.value)} placeholder="https://x.com/workshop" />
+                  <Label htmlFor="social_twitter" className="flex items-center gap-2"><Twitter className="w-4 h-4" /> Twitter / X</Label>
+                  <Input id="social_twitter" value={form.social_twitter || ""} onChange={(e) => handleChange("social_twitter", e.target.value)} placeholder="https://x.com/workshop" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="linkedin" className="flex items-center gap-2"><Linkedin className="w-4 h-4" /> LinkedIn</Label>
-                  <Input id="linkedin" value={social.linkedin} onChange={(e) => handleSocialChange("linkedin", e.target.value)} placeholder="https://linkedin.com/company/workshop" />
+                  <Label htmlFor="social_linkedin" className="flex items-center gap-2"><Linkedin className="w-4 h-4" /> LinkedIn</Label>
+                  <Input id="social_linkedin" value={form.social_linkedin || ""} onChange={(e) => handleChange("social_linkedin", e.target.value)} placeholder="https://linkedin.com/company/workshop" />
                 </div>
               </div>
             </CardContent>

@@ -2,17 +2,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Workshop {
   id: string;
+  user_id: string;
   name: string;
   logo_url?: string;
   primary_color?: string;
   secondary_color?: string;
   background_image_url?: string;
+  footer_info?: string;
   contact_phone?: string;
   contact_email?: string;
-  address?: string;
-  website?: string;
-  social_links?: Record<string, string>;
-  footer_text?: string;
+  contact_address?: string;
+  social_facebook?: string;
+  social_instagram?: string;
+  social_twitter?: string;
   created_at: string;
   updated_at: string;
 }

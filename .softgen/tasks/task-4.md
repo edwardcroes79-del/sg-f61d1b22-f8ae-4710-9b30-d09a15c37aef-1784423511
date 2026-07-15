@@ -1,6 +1,6 @@
 ---
 title: Vehicle Management & QR Codes
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [vehicles, qr-code, crud]
@@ -13,13 +13,13 @@ position: 4
 Vehicle CRUD with unique QR slug generation and QR code display/print.
 
 ## Checklist
-- [ ] Create vehicles list page with search
-- [ ] Create vehicle add/edit form with all fields
-- [ ] Generate unique QR slug on vehicle creation
-- [ ] Display QR code on vehicle detail page
-- [ ] Add print-friendly QR code view
-- [ ] Upload vehicle header image to Supabase Storage
-- [ ] Link vehicles to customers
+- [x] Create vehicles list page with search
+- [x] Create vehicle add/edit form with all fields
+- [x] Generate unique QR slug on vehicle creation
+- [x] Display QR code on vehicle detail page
+- [x] Add print-friendly QR code view
+- [x] Upload vehicle header image to Supabase Storage
+- [x] Link vehicles to customers
 
 ## Acceptance
 - Admin can register vehicles with all fields

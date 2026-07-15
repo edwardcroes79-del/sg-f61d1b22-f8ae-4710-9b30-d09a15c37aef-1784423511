@@ -15,6 +15,7 @@ export interface Workshop {
   social_facebook?: string;
   social_instagram?: string;
   social_twitter?: string;
+  social_linkedin?: string;
   created_at: string;
   updated_at: string;
 }

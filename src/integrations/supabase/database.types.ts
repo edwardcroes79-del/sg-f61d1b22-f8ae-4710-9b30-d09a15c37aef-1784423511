@@ -285,6 +285,7 @@ export type Database = {
           secondary_color: string | null
           social_facebook: string | null
           social_instagram: string | null
+          social_linkedin: string | null
           social_twitter: string | null
           updated_at: string | null
           user_id: string
@@ -303,6 +304,7 @@ export type Database = {
           secondary_color?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
+          social_linkedin?: string | null
           social_twitter?: string | null
           updated_at?: string | null
           user_id: string
@@ -321,6 +323,7 @@ export type Database = {
           secondary_color?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
+          social_linkedin?: string | null
           social_twitter?: string | null
           updated_at?: string | null
           user_id?: string

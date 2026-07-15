@@ -70,9 +70,13 @@ export default function SettingsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.name?.trim()) {
+      toast({ title: "Workshop name is required", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
-      await saveWorkshop(form);
+      await saveWorkshop({ ...form, name: form.name.trim() });
       toast({ title: "Settings saved" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

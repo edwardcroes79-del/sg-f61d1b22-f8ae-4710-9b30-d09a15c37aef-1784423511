@@ -22,6 +22,7 @@ const emptyForm: Partial<Workshop> = {
   social_facebook: "",
   social_instagram: "",
   social_twitter: "",
+  social_linkedin: "",
 };
 
 export default function SettingsPage() {

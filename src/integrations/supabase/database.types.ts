@@ -336,6 +336,10 @@ export type Database = {
     }
     Functions: {
       user_owns_vehicle: { Args: { vehicle_uuid: string }; Returns: boolean }
+      user_owns_vehicle_by_id: {
+        Args: { vehicle_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -189,7 +189,7 @@ export async function getDueSoonVehicles(): Promise<VehicleWithCustomer[]> {
     .eq("workshop_id", workshopId)
     .not("next_service_mileage", "is", null)
     .not("current_mileage", "is", null)
-    .lte("next_service_mileage", "current_mileage")
+    .or("next_service_mileage.lte.current_mileage")
     .order("next_service_mileage", { ascending: true });
 
   if (mileageError) throw mileageError;

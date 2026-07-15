@@ -31,7 +31,7 @@ interface ServiceRecordSectionProps {
 const emptyForm = {
   id: "",
   service_date: new Date().toISOString().slice(0, 10),
-  mileage: 0,
+  mileage: "",
   service_type: "",
   technician: "",
   work_performed: "",

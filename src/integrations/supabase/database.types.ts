@@ -281,6 +281,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          powered_by: string | null
           primary_color: string | null
           secondary_color: string | null
           social_facebook: string | null
@@ -300,6 +301,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          powered_by?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           social_facebook?: string | null
@@ -319,6 +321,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          powered_by?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           social_facebook?: string | null

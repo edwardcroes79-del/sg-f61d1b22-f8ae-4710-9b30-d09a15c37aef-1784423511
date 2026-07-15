@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { signIn, signUp } from "@/services/authService";
+import { signIn, resetPassword } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench, Loader2, Car } from "lucide-react";
+import { Wrench, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 function hexToHsl(hex: string): string {
@@ -33,10 +33,11 @@ function hexToHsl(hex: string): string {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [brand, setBrand] = useState<{
     name: string;
@@ -53,20 +54,33 @@ export default function LoginPage() {
     loadBrand();
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setMessage("");
 
     try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
+      await signIn(email, password);
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReset(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      await resetPassword(email);
+      setMessage("Check your email for a password reset link.");
+    } catch (err: any) {
+      setError(err.message || "Password reset failed");
     } finally {
       setLoading(false);
     }
@@ -98,64 +112,109 @@ export default function LoginPage() {
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="font-heading text-xl">
-              {isLogin ? "Welcome back" : "Create account"}
+              {mode === "login" ? "Welcome back" : "Reset password"}
             </CardTitle>
             <CardDescription>
-              {isLogin
+              {mode === "login"
                 ? "Sign in to your workshop dashboard"
-                : "Set up your workshop account"}
+                : "Enter your email to receive a reset link"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@workshop.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-lg bg-danger/10 text-danger text-sm">
-                  {error}
+            {mode === "login" ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@workshop.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-              <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isLogin ? "Sign In" : "Create Account"}
-              </Button>
-            </form>
+                {(error || message) && (
+                  <div className={`p-3 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+                    {error || message}
+                  </div>
+                )}
 
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError("");
-                }}
-                className="text-sm text-primary hover:underline"
-              >
-                {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
-              </button>
-            </div>
+                <Button type="submit" className="w-full h-11" disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Sign In
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("reset");
+                      setError("");
+                      setMessage("");
+                    }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="admin@workshop.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-11"
+                  />
+                </div>
+
+                {(error || message) && (
+                  <div className={`p-3 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+                    {error || message}
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full h-11" disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Send Reset Link
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setError("");
+                      setMessage("");
+                    }}
+                    className="text-sm text-primary hover:underline inline-flex items-center"
+                  >
+                    <ArrowLeft className="w-3 h-3 mr-1" />
+                    Back to sign in
+                  </button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
 

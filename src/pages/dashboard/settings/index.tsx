@@ -9,7 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { getWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/workshopService";
 import { useWorkshop } from "@/contexts/WorkshopContext";
-import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2 } from "lucide-react";
+import { updateEmail, updatePassword } from "@/services/authService";
+import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog } from "lucide-react";
 
 const emptyForm: Partial<Workshop> = {
   name: "",
@@ -34,6 +35,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<Partial<Workshop>>(emptyForm);
+  const [account, setAccount] = useState({ email: "", newPassword: "", confirmPassword: "" });
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -78,6 +82,46 @@ export default function SettingsPage() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleUpdateEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!account.email.trim()) {
+      toast({ title: "Enter a new email address", variant: "destructive" });
+      return;
+    }
+    setUpdatingEmail(true);
+    try {
+      await updateEmail(account.email.trim());
+      toast({ title: "Verification email sent", description: "Confirm the new address via email before it takes effect." });
+      setAccount((prev) => ({ ...prev, email: "" }));
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUpdatingEmail(false);
+    }
+  }
+
+  async function handleUpdatePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (account.newPassword.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    if (account.newPassword !== account.confirmPassword) {
+      toast({ title: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+    setUpdatingPassword(true);
+    try {
+      await updatePassword(account.newPassword);
+      toast({ title: "Password updated successfully" });
+      setAccount((prev) => ({ ...prev, newPassword: "", confirmPassword: "" }));
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setUpdatingPassword(false);
     }
   }
 
@@ -221,6 +265,62 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h2 className="text-xl font-heading font-semibold mb-4 flex items-center gap-2">
+            <UserCog className="w-5 h-5 text-primary" />
+            Account Security
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="card-premium">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Mail className="w-4 h-4 text-primary" />
+                  Change Email
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateEmail} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-email">New Email Address</Label>
+                    <Input id="new-email" type="email" value={account.email} onChange={(e) => setAccount((prev) => ({ ...prev, email: e.target.value }))} placeholder="admin@workshop.com" />
+                  </div>
+                  <Button type="submit" disabled={updatingEmail} className="w-full">
+                    {updatingEmail && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {updatingEmail ? "Sending..." : "Update Email"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className="card-premium">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Lock className="w-4 h-4 text-primary" />
+                  Change Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input id="new-password" type="password" value={account.newPassword} onChange={(e) => setAccount((prev) => ({ ...prev, newPassword: e.target.value }))} placeholder="••••••••" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input id="confirm-password" type="password" value={account.confirmPassword} onChange={(e) => setAccount((prev) => ({ ...prev, confirmPassword: e.target.value }))} placeholder="••••••••" />
+                  </div>
+                  <Button type="submit" disabled={updatingPassword} className="w-full">
+                    {updatingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {updatingPassword ? "Updating..." : "Update Password"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <Separator />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
+import { useWorkshop } from "@/contexts/WorkshopContext";
 import {
   LayoutDashboard,
   Users,
@@ -22,20 +23,32 @@ const navItems = [
 
 export function Sidebar() {
   const router = useRouter();
+  const { workshop } = useWorkshop();
 
   async function handleLogout() {
     await signOut();
     router.push("/login");
   }
 
+  const primaryColor = workshop?.primary_color || "#D97706";
+
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col hidden md:flex">
       <div className="p-6 border-b border-sidebar-border">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Wrench className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-heading font-semibold text-lg tracking-tight">Torque Log</span>
+          {workshop?.logo_url ? (
+            <img src={workshop.logo_url} alt={workshop.name} className="w-8 h-8 object-contain rounded" />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: primaryColor }}
+            >
+              <Wrench className="w-4 h-4 text-white" />
+            </div>
+          )}
+          <span className="font-heading font-semibold text-lg tracking-tight truncate">
+            {workshop?.name || "Torque Log"}
+          </span>
         </Link>
       </div>
 

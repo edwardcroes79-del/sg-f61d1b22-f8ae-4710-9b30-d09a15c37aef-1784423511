@@ -9,6 +9,7 @@ export interface Workshop {
   secondary_color?: string;
   background_image_url?: string;
   footer_info?: string;
+  powered_by?: string;
   contact_phone?: string;
   contact_email?: string;
   contact_address?: string;
@@ -49,6 +50,7 @@ export async function saveWorkshop(workshop: Partial<Workshop> & { name: string 
     secondary_color: workshop.secondary_color,
     background_image_url: workshop.background_image_url,
     footer_info: workshop.footer_info,
+    powered_by: workshop.powered_by,
     contact_phone: workshop.contact_phone,
     contact_email: workshop.contact_email,
     contact_address: workshop.contact_address,

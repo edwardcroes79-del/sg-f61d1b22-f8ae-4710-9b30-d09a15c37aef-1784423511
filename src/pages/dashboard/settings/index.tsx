@@ -19,6 +19,7 @@ const emptyForm: Partial<Workshop> = {
   contact_email: "",
   contact_address: "",
   footer_info: "",
+  powered_by: "",
   social_facebook: "",
   social_instagram: "",
   social_twitter: "",
@@ -124,6 +125,10 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="footer_info">Footer Text</Label>
                 <Input id="footer_info" value={form.footer_info || ""} onChange={(e) => handleChange("footer_info", e.target.value)} placeholder="Premium vehicle care since 2024" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="powered_by">Powered By</Label>
+                <Input id="powered_by" value={form.powered_by || ""} onChange={(e) => handleChange("powered_by", e.target.value)} placeholder="Powered by Torque Log" />
               </div>
             </CardContent>
           </Card>

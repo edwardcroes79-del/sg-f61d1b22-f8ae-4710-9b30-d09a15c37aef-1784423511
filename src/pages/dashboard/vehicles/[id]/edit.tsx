@@ -91,7 +91,13 @@ export default function EditVehiclePage() {
     try {
       let headerImageUrl = form.header_image_url;
       if (imageFile) {
-        headerImageUrl = await uploadVehicleImage(imageFile);
+        try {
+          headerImageUrl = await uploadVehicleImage(imageFile);
+        } catch (uploadErr: any) {
+          toast({ title: "Image upload failed", description: uploadErr.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
       }
 
       await updateVehicle(id as string, {
@@ -114,7 +120,7 @@ export default function EditVehiclePage() {
       toast({ title: "Vehicle updated" });
       router.push(`/dashboard/vehicles/${id}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Failed to save vehicle", description: err.message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getWorkshop, saveWorkshop, type Workshop } from "@/services/workshopService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkshopContextValue {
   workshop: Workshop | null;
@@ -17,8 +18,15 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setWorkshop(null);
+        return;
+      }
       const data = await getWorkshop();
       setWorkshop(data);
+    } catch (err) {
+      setWorkshop(null);
     } finally {
       setLoading(false);
     }
@@ -31,6 +39,16 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refresh();
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        refresh();
+      } else if (event === "SIGNED_OUT") {
+        setWorkshop(null);
+      }
+    });
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, [refresh]);
 
   return (

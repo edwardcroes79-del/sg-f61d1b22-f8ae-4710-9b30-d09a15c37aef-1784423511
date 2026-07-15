@@ -1,6 +1,6 @@
 ---
 title: Service Records & Public Vehicle Page
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [service-records, timeline, public-page]
@@ -13,11 +13,11 @@ position: 5
 Service record CRUD with timeline display and public read-only vehicle page for QR scans.
 
 ## Checklist
-- [ ] Create service record service
-- [ ] Add service record forms on vehicle detail page
-- [ ] Build public vehicle page at /vehicle/[slug]
-- [ ] Show service history timeline newest first
-- [ ] Display next service countdown and overdue status
+- [x] Create service record service
+- [x] Add service record forms on vehicle detail page
+- [x] Build public vehicle page at /vehicle/[slug]
+- [x] Show service history timeline newest first
+- [x] Display next service countdown and overdue status
 
 ## Acceptance
 - Admin can add/edit/delete service records

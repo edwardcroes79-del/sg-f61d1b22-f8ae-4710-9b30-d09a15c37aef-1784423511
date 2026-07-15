@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { getVehicleBySlug } from "@/services/vehicleService";
 import { getServiceRecords } from "@/services/serviceRecordService";
+import type { ServiceRecord } from "@/services/serviceRecordService";
 import { formatDate, formatMileage, getServiceStatus, cn } from "@/lib/utils";
 import {
   Car,
@@ -59,27 +60,11 @@ interface PublicVehicleData {
   };
 }
 
-interface ServiceRecordWithImages {
-  id: string;
-  service_date: string;
-  odometer_mileage?: number;
-  service_type: string;
-  technician?: string;
-  work_performed?: string;
-  parts_replaced?: string;
-  fluids_changed?: string;
-  labour_notes?: string;
-  recommendations?: string;
-  invoice_number?: string;
-  total_cost?: number;
-  service_images: { id: string; image_url: string }[];
-}
-
 export default function PublicVehiclePage() {
   const router = useRouter();
   const { slug } = router.query;
   const [vehicle, setVehicle] = useState<PublicVehicleData | null>(null);
-  const [records, setRecords] = useState<ServiceRecordWithImages[]>([]);
+  const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +75,7 @@ export default function PublicVehiclePage() {
         const data = await getVehicleBySlug(slug as string);
         setVehicle(data as PublicVehicleData);
         const serviceData = await getServiceRecords(data.id);
-        setRecords(serviceData as ServiceRecordWithImages[]);
+        setRecords(serviceData);
       } catch (err: any) {
         setError(err.message || "Vehicle not found");
       } finally {

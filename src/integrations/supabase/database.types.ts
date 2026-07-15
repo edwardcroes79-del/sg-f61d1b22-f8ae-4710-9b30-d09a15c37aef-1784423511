@@ -129,7 +129,7 @@ export type Database = {
           id: string
           invoice_number: string | null
           labour_notes: string | null
-          mileage: number
+          mileage: number | null
           parts_replaced: string | null
           recommendations: string | null
           service_date: string
@@ -147,7 +147,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           labour_notes?: string | null
-          mileage: number
+          mileage?: number | null
           parts_replaced?: string | null
           recommendations?: string | null
           service_date: string
@@ -165,7 +165,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           labour_notes?: string | null
-          mileage?: number
+          mileage?: number | null
           parts_replaced?: string | null
           recommendations?: string | null
           service_date?: string

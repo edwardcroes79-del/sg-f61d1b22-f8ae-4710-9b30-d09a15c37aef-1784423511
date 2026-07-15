@@ -31,7 +31,7 @@ interface ServiceRecordSectionProps {
 const emptyForm = {
   id: "",
   service_date: new Date().toISOString().slice(0, 10),
-  mileage: "",
+  mileage: 0,
   service_type: "",
   technician: "",
   work_performed: "",
@@ -124,7 +124,7 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
       const recordData = {
         vehicle_id: vehicleId,
         service_date: form.service_date,
-        mileage: form.mileage ? parseInt(form.mileage) : undefined,
+        mileage: form.mileage ? parseInt(form.mileage) : 0,
         service_type: form.service_type,
         technician: form.technician || undefined,
         work_performed: form.work_performed || undefined,

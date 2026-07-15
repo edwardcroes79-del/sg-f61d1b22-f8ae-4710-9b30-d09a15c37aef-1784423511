@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +30,18 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, formatMileage } from "@/lib/utils";
 import { Plus, Wrench, Calendar, Gauge, User, FileText, Trash2, Edit, X, ImagePlus } from "lucide-react";
 import type { ServiceRecord } from "@/services/serviceRecordService";
+
+const SERVICE_TYPES = [
+  "Small Service",
+  "General Service",
+  "Full Service",
+  "Oil Change",
+  "Brake Service",
+  "Tyre Replacement",
+  "Battery Replacement",
+  "Diagnostic Check",
+  "Other",
+];
 
 interface ServiceRecordSectionProps {
   vehicleId: string;
@@ -309,7 +328,27 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="service_type">Service Type *</Label>
-                <Input id="service_type" value={form.service_type} onChange={(e) => handleChange("service_type", e.target.value)} placeholder="e.g. Full Service" required />
+                <Select
+                  value={SERVICE_TYPES.includes(form.service_type) ? form.service_type : "Other"}
+                  onValueChange={(value) => handleChange("service_type", value === "Other" ? "" : value)}
+                >
+                  <SelectTrigger id="service_type">
+                    <SelectValue placeholder="Select service type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SERVICE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(!form.service_type || !SERVICE_TYPES.includes(form.service_type)) && (
+                  <Input
+                    placeholder="Enter custom service type"
+                    value={form.service_type}
+                    onChange={(e) => handleChange("service_type", e.target.value)}
+                    required
+                  />
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mileage">Odometer (km)</Label>

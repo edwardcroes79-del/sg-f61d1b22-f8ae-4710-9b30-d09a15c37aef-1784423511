@@ -169,17 +169,34 @@ export async function getVehicleCount(): Promise<number> {
 
 export async function getDueSoonVehicles(): Promise<VehicleWithCustomer[]> {
   const workshopId = await getUserWorkshopId();
-  const now = new Date().toISOString().slice(0, 10);
   const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  const { data, error } = await supabase
+  // Vehicles with next_service_date within the next 7 days (or overdue)
+  const { data: dateDue, error: dateError } = await supabase
     .from("vehicles")
     .select("*, customer:customers(id, full_name, phone_number)")
     .eq("workshop_id", workshopId)
-    .or(`next_service_date.lte.${future},next_service_mileage.lte.${now}`)
-    .order("next_service_date", { ascending: true })
-    .limit(10);
+    .not("next_service_date", "is", null)
+    .lte("next_service_date", future)
+    .order("next_service_date", { ascending: true });
 
-  if (error) throw error;
-  return (data || []) as unknown as VehicleWithCustomer[];
+  if (dateError) throw dateError;
+
+  // Vehicles with next_service_mileage <= current_mileage (overdue by mileage)
+  const { data: mileageDue, error: mileageError } = await supabase
+    .from("vehicles")
+    .select("*, customer:customers(id, full_name, phone_number)")
+    .eq("workshop_id", workshopId)
+    .not("next_service_mileage", "is", null)
+    .not("current_mileage", "is", null)
+    .lte("next_service_mileage", "current_mileage")
+    .order("next_service_mileage", { ascending: true });
+
+  if (mileageError) throw mileageError;
+
+  const combinedMap = new Map<string, VehicleWithCustomer>();
+  for (const v of dateDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
+  for (const v of mileageDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
+
+  return Array.from(combinedMap.values()).slice(0, 10);
 }

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { getWorkshop, saveWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/workshopService";
+import { getWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/workshopService";
+import { useWorkshop } from "@/contexts/WorkshopContext";
 import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2 } from "lucide-react";
 
 const emptyForm: Partial<Workshop> = {
@@ -28,6 +29,7 @@ const emptyForm: Partial<Workshop> = {
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { save, refresh, workshop } = useWorkshop();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,21 +37,13 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadWorkshop();
-  }, []);
-
-  async function loadWorkshop() {
-    try {
-      const data = await getWorkshop();
-      if (data) {
-        setForm(data);
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
+    if (workshop) {
+      setForm(workshop);
       setLoading(false);
+    } else {
+      refresh().then(() => setLoading(false));
     }
-  }
+  }, [workshop, refresh]);
 
   function handleChange(field: keyof Workshop, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -78,7 +72,7 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
-      await saveWorkshop({ ...form, name: form.name.trim() });
+      await save({ ...form, name: form.name.trim() });
       toast({ title: "Settings saved" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

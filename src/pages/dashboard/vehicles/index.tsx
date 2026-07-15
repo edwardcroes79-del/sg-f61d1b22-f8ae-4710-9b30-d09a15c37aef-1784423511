@@ -63,7 +63,6 @@ export default function VehiclesPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-heading font-semibold">Vehicles</h1>
             <p className="text-muted-foreground">Manage registered vehicles and QR codes</p>
           </div>
           <Link href="/dashboard/vehicles/new">

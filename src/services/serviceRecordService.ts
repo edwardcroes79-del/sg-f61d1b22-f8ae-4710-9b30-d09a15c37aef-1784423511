@@ -86,3 +86,37 @@ export async function addServiceImage(serviceRecordId: string, imageUrl: string)
   if (error) throw error;
   return data;
 }
+
+async function getUserWorkshopId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("workshops")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    const { data: newWorkshop, error: createError } = await supabase
+      .from("workshops")
+      .insert({ name: "My Workshop", user_id: user.id })
+      .select("id")
+      .single();
+    if (createError) throw createError;
+    return newWorkshop.id;
+  }
+  return data.id;
+}
+
+export async function getServiceRecordCount(): Promise<number> {
+  const workshopId = await getUserWorkshopId();
+
+  const { count, error } = await supabase
+    .from("service_records")
+    .select("id", { count: "exact", head: true })
+    .eq("vehicle_id.workshop_id", workshopId);
+
+  if (error) throw error;
+  return count || 0;
+}

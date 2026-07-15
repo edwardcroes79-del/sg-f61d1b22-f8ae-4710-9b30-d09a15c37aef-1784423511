@@ -155,3 +155,35 @@ export async function uploadVehicleImage(file: File) {
 
   return publicUrl;
 }
+
+function buildWorkshopQuery() {
+  return supabase.rpc("get_workshop_vehicles");
+}
+
+export async function getVehicleCount(): Promise<number> {
+  const workshopId = await getUserWorkshopId();
+  const { count, error } = await supabase
+    .from("vehicles")
+    .select("*", { count: "exact", head: true })
+    .eq("workshop_id", workshopId);
+
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function getDueSoonVehicles(): Promise<VehicleWithCustomer[]> {
+  const workshopId = await getUserWorkshopId();
+  const now = new Date().toISOString().slice(0, 10);
+  const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("vehicles")
+    .select("*, customer:customers(id, full_name, phone_number)")
+    .eq("workshop_id", workshopId)
+    .or(`next_service_date.lte.${future},next_service_mileage.lte.${now}`)
+    .order("next_service_date", { ascending: true })
+    .limit(10);
+
+  if (error) throw error;
+  return (data || []) as unknown as VehicleWithCustomer[];
+}

@@ -98,3 +98,14 @@ export async function deleteCustomer(id: string) {
 
   if (error) throw error;
 }
+
+export async function getCustomerCount(): Promise<number> {
+  const workshopId = await getUserWorkshopId();
+  const { count, error } = await supabase
+    .from("customers")
+    .select("*", { count: "exact", head: true })
+    .eq("workshop_id", workshopId);
+
+  if (error) throw error;
+  return count || 0;
+}

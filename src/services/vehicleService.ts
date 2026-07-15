@@ -86,7 +86,7 @@ export async function getVehicleBySlug(slug: string) {
     .single();
 
   if (error) throw error;
-  return data as unknown as VehicleWithCustomer & { workshop: { name: string; logo_url?: string; primary_color?: string; secondary_color?: string; contact_phone?: string; contact_email?: string; address?: string; website?: string; social_links?: Record<string, string>; footer_text?: string } };
+  return data as unknown as VehicleWithCustomer & { workshop: { name: string; logo_url?: string; primary_color?: string; secondary_color?: string; contact_phone?: string; contact_email?: string; contact_address?: string; website?: string; footer_info?: string; powered_by?: string; social_facebook?: string; social_instagram?: string; social_twitter?: string; social_linkedin?: string } };
 }
 
 export async function getVehicle(id: string) {

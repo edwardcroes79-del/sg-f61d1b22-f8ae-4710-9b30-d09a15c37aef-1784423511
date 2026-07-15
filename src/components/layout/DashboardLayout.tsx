@@ -56,7 +56,15 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
   const brandStyle: React.CSSProperties = {
     ["--primary" as string]: hexToHsl(workshop?.primary_color || "#D97706"),
+    ["--primary-foreground" as string]: "0 0% 100%",
     ["--secondary" as string]: hexToHsl(workshop?.secondary_color || "#64748B"),
+    ["--secondary-foreground" as string]: "0 0% 100%",
+    ["--accent" as string]: hexToHsl(workshop?.primary_color || "#D97706"),
+    ["--accent-foreground" as string]: "0 0% 100%",
+    ["--ring" as string]: hexToHsl(workshop?.primary_color || "#D97706"),
+    ["--sidebar-primary" as string]: hexToHsl(workshop?.primary_color || "#D97706"),
+    ["--sidebar-primary-foreground" as string]: "0 0% 100%",
+    ["--sidebar-ring" as string]: hexToHsl(workshop?.primary_color || "#D97706"),
   };
 
   return (

@@ -25,6 +25,29 @@ import {
   CalendarDays,
 } from "lucide-react";
 
+function hexToHsl(hex: string): string {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  if (d) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
 interface PublicVehicleData {
   id: string;
   slug: string;
@@ -54,9 +77,14 @@ interface PublicVehicleData {
     secondary_color?: string;
     contact_phone?: string;
     contact_email?: string;
-    address?: string;
+    contact_address?: string;
     website?: string;
-    footer_text?: string;
+    footer_info?: string;
+    powered_by?: string;
+    social_facebook?: string;
+    social_instagram?: string;
+    social_twitter?: string;
+    social_linkedin?: string;
   };
 }
 
@@ -113,7 +141,7 @@ export default function PublicVehiclePage() {
   const progress = Math.max(0, Math.min(100, ((daysTotal - daysRemaining) / daysTotal) * 100));
 
   const primaryStyle = vehicle.workshop.primary_color
-    ? ({ ["--brand-primary" as string]: vehicle.workshop.primary_color } as React.CSSProperties)
+    ? ({ ["--primary" as string]: hexToHsl(vehicle.workshop.primary_color), ["--accent" as string]: hexToHsl(vehicle.workshop.primary_color), ["--ring" as string]: hexToHsl(vehicle.workshop.primary_color) } as React.CSSProperties)
     : {};
 
   return (
@@ -366,8 +394,8 @@ export default function PublicVehiclePage() {
       <footer className="border-t bg-card mt-12">
         <div className="container py-6 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} {vehicle.workshop.name}</p>
-          {vehicle.workshop.footer_text && <p className="mt-1">{vehicle.workshop.footer_text}</p>}
-          <p className="mt-1 text-xs">Powered by Torque Log</p>
+          {vehicle.workshop.footer_info && <p className="mt-1">{vehicle.workshop.footer_info}</p>}
+          <p className="mt-1 text-xs">{vehicle.workshop.powered_by || "Powered by Torque Log"}</p>
         </div>
       </footer>
     </div>

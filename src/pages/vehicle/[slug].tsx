@@ -152,6 +152,13 @@ export default function PublicVehiclePage() {
     social_linkedin: "",
   };
 
+  const defaultCustomer = vehicle.customer || {
+    full_name: "Owner",
+    phone_number: "",
+    email: "",
+    address: "",
+  };
+
   const status = getServiceStatus(vehicle.next_service_date, vehicle.next_service_mileage, vehicle.current_mileage);
   const daysTotal = 365;
   const daysRemaining = status.daysRemaining ?? 0;
@@ -203,7 +210,7 @@ export default function PublicVehiclePage() {
               <Badge className="bg-white/20 text-white border-white/30 font-mono text-base px-3 py-1">
                 {vehicle.registration_number}
               </Badge>
-              <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {vehicle.customer.full_name}</span>
+              <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {defaultCustomer.full_name}</span>
               <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {vehicle.year || "—"}</span>
             </div>
           </div>
@@ -240,24 +247,24 @@ export default function PublicVehiclePage() {
               <CardContent className="space-y-3">
                 <div className="flex items-start gap-3">
                   <User className="w-4 h-4 text-muted-foreground mt-1" />
-                  <p className="font-medium">{vehicle.customer.full_name}</p>
+                  <p className="font-medium">{defaultCustomer.full_name}</p>
                 </div>
-                {vehicle.customer.phone_number && (
+                {defaultCustomer.phone_number && (
                   <div className="flex items-start gap-3">
                     <Phone className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{vehicle.customer.phone_number}</p>
+                    <p>{defaultCustomer.phone_number}</p>
                   </div>
                 )}
-                {vehicle.customer.email && (
+                {defaultCustomer.email && (
                   <div className="flex items-start gap-3">
                     <Mail className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{vehicle.customer.email}</p>
+                    <p>{defaultCustomer.email}</p>
                   </div>
                 )}
-                {vehicle.customer.address && (
+                {defaultCustomer.address && (
                   <div className="flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{vehicle.customer.address}</p>
+                    <p>{defaultCustomer.address}</p>
                   </div>
                 )}
               </CardContent>

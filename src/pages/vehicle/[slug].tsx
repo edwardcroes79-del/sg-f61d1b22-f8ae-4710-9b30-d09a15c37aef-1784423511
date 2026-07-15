@@ -374,10 +374,10 @@ export default function PublicVehiclePage() {
                     <p>{vehicle.workshop.contact_email}</p>
                   </div>
                 )}
-                {vehicle.workshop.address && (
+                {vehicle.workshop.contact_address && (
                   <div className="flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{vehicle.workshop.address}</p>
+                    <p>{vehicle.workshop.contact_address}</p>
                   </div>
                 )}
                 {vehicle.workshop.website && (

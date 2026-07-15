@@ -241,7 +241,7 @@ export default function PublicVehiclePage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <User className="w-5 h-5 text-primary" />
-                  Owner Information
+                  Driver Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -389,7 +389,7 @@ export default function PublicVehiclePage() {
 
             <Card className="card-premium">
               <CardHeader>
-                <CardTitle className="text-lg">Workshop Contact</CardTitle>
+                <CardTitle className="text-lg">Contact</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {defaultWorkshop.contact_phone && (

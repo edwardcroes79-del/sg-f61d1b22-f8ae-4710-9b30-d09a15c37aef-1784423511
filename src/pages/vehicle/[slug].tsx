@@ -282,55 +282,58 @@ export default function PublicVehiclePage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="relative space-y-6 pl-4 md:pl-8 border-l-2 border-muted">
-                  {records.map((record) => (
-                    <Card key={record.id} className="card-premium relative">
-                      <div className="absolute -left-[25px] md:-left-[41px] top-6 w-4 h-4 rounded-full bg-primary border-4 border-background" />
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Wrench className="w-4 h-4 text-primary" />
-                          {record.service_type}
-                        </CardTitle>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" /> {formatDate(record.service_date)}</span>
-                          {record.mileage !== undefined && (
-                            <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.mileage)} km</span>
-                          )}
-                          {record.technician && (
-                            <span className="flex items-center gap-1"><User className="w-3 h-3" /> {record.technician}</span>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {record.work_performed && (
-                          <div>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Work Performed</p>
-                            <p className="text-sm whitespace-pre-line">{record.work_performed}</p>
+                <div className="relative space-y-6">
+                  {records.map((record, idx) => (
+                    <div key={record.id} className="relative pl-8 md:pl-10">
+                      <div className="absolute left-3 md:left-4 top-0 bottom-0 w-0.5 bg-muted" aria-hidden="true" />
+                      <div className="absolute left-1 md:left-2 top-6 w-4 h-4 rounded-full bg-primary border-4 border-background z-10" />
+                      <Card className="card-premium">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Wrench className="w-4 h-4 text-primary" />
+                            {record.service_type}
+                          </CardTitle>
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" /> {formatDate(record.service_date)}</span>
+                            {record.mileage !== undefined && (
+                              <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.mileage)} km</span>
+                            )}
+                            {record.technician && (
+                              <span className="flex items-center gap-1"><User className="w-3 h-3" /> {record.technician}</span>
+                            )}
                           </div>
-                        )}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          {record.parts_replaced && (
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {record.work_performed && (
                             <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Parts Replaced</p>
-                              <p className="text-sm whitespace-pre-line">{record.parts_replaced}</p>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Work Performed</p>
+                              <p className="text-sm whitespace-pre-line">{record.work_performed}</p>
                             </div>
                           )}
-                          {record.fluids_changed && (
-                            <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Fluids Changed</p>
-                              <p className="text-sm whitespace-pre-line">{record.fluids_changed}</p>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {record.parts_replaced && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Parts Replaced</p>
+                                <p className="text-sm whitespace-pre-line">{record.parts_replaced}</p>
+                              </div>
+                            )}
+                            {record.fluids_changed && (
+                              <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Fluids Changed</p>
+                                <p className="text-sm whitespace-pre-line">{record.fluids_changed}</p>
+                              </div>
+                            )}
+                          </div>
+                          {record.attachments && record.attachments.length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3">
+                              {record.attachments.map((url, idx) => (
+                                <img key={idx} src={url} alt="Service" className="rounded-lg aspect-square object-cover border" />
+                              ))}
                             </div>
                           )}
-                        </div>
-                        {record.attachments && record.attachments.length > 0 && (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3">
-                            {record.attachments.map((url, idx) => (
-                              <img key={idx} src={url} alt="Service" className="rounded-lg aspect-square object-cover border" />
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </div>
                   ))}
                 </div>
               )}

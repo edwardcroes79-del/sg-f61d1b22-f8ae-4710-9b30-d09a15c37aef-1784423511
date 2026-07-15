@@ -15,7 +15,10 @@ export function generateQRSlug(): string {
 }
 
 export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  const input = typeof date === "string" ? date : date.toISOString().slice(0, 10);
+  const [year, month, day] = input.split("T")[0].split("-").map(Number);
+  const localDate = new Date(year, month - 1, day);
+  return localDate.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -27,9 +30,12 @@ export function formatMileage(mileage: number): string {
 }
 
 export function daysUntil(date: string | Date): number {
-  const target = new Date(date);
+  const input = typeof date === "string" ? date : date.toISOString().slice(0, 10);
+  const [year, month, day] = input.split("T")[0].split("-").map(Number);
+  const target = new Date(year, month - 1, day);
   const now = new Date();
-  const diff = target.getTime() - now.getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = target.getTime() - today.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 

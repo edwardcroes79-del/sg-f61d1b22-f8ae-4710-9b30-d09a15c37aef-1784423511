@@ -135,33 +135,50 @@ export default function PublicVehiclePage() {
     );
   }
 
+  const defaultWorkshop = vehicle.workshop || {
+    name: "Torque Log",
+    logo_url: "",
+    primary_color: "#D97706",
+    secondary_color: "#64748B",
+    contact_phone: "",
+    contact_email: "",
+    contact_address: "",
+    website: "",
+    footer_info: "",
+    powered_by: "Powered by Torque Log",
+    social_facebook: "",
+    social_instagram: "",
+    social_twitter: "",
+    social_linkedin: "",
+  };
+
   const status = getServiceStatus(vehicle.next_service_date, vehicle.next_service_mileage, vehicle.current_mileage);
   const daysTotal = 365;
   const daysRemaining = status.daysRemaining ?? 0;
   const progress = Math.max(0, Math.min(100, ((daysTotal - daysRemaining) / daysTotal) * 100));
 
-  const primaryStyle = vehicle.workshop.primary_color
-    ? ({ ["--primary" as string]: hexToHsl(vehicle.workshop.primary_color), ["--accent" as string]: hexToHsl(vehicle.workshop.primary_color), ["--ring" as string]: hexToHsl(vehicle.workshop.primary_color) } as React.CSSProperties)
+  const primaryStyle = defaultWorkshop.primary_color
+    ? ({ ["--primary" as string]: hexToHsl(defaultWorkshop.primary_color), ["--accent" as string]: hexToHsl(defaultWorkshop.primary_color), ["--ring" as string]: hexToHsl(defaultWorkshop.primary_color) } as React.CSSProperties)
     : {};
 
   return (
     <div className="min-h-screen bg-background" style={primaryStyle}>
       <header className="bg-card border-b">
-        <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {vehicle.workshop.logo_url ? (
-              <img src={vehicle.workshop.logo_url} alt={vehicle.workshop.name} className="h-10 w-auto object-contain" />
+        <div className="container py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {defaultWorkshop.logo_url ? (
+              <img src={defaultWorkshop.logo_url} alt={defaultWorkshop.name} className="h-10 w-auto object-contain" />
             ) : (
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Car className="w-5 h-5 text-primary" />
               </div>
             )}
-            <div>
-              <h1 className="font-heading font-semibold leading-tight">{vehicle.workshop.name}</h1>
+            <div className="min-w-0">
+              <h1 className="font-heading font-semibold leading-tight truncate">{defaultWorkshop.name}</h1>
               <p className="text-xs text-muted-foreground">Digital Service Record</p>
             </div>
           </div>
-          <Badge variant="outline" className="font-mono">
+          <Badge variant="outline" className="font-mono shrink-0 text-sm">
             {vehicle.registration_number}
           </Badge>
         </div>
@@ -178,11 +195,14 @@ export default function PublicVehiclePage() {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <p className="text-sm opacity-90 mb-1">{vehicle.workshop.name}</p>
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-2">
+            <p className="text-sm opacity-90 mb-1">{defaultWorkshop.name}</p>
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-3">
               {vehicle.make} {vehicle.model}
             </h2>
-            <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <Badge className="bg-white/20 text-white border-white/30 font-mono text-base px-3 py-1">
+                {vehicle.registration_number}
+              </Badge>
               <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {vehicle.customer.full_name}</span>
               <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {vehicle.year || "—"}</span>
             </div>
@@ -362,26 +382,26 @@ export default function PublicVehiclePage() {
                 <CardTitle className="text-lg">Workshop Contact</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {vehicle.workshop.contact_phone && (
+                {defaultWorkshop.contact_phone && (
                   <div className="flex items-start gap-3">
                     <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{vehicle.workshop.contact_phone}</p>
+                    <p>{defaultWorkshop.contact_phone}</p>
                   </div>
                 )}
-                {vehicle.workshop.contact_email && (
+                {defaultWorkshop.contact_email && (
                   <div className="flex items-start gap-3">
                     <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{vehicle.workshop.contact_email}</p>
+                    <p>{defaultWorkshop.contact_email}</p>
                   </div>
                 )}
-                {vehicle.workshop.contact_address && (
+                {defaultWorkshop.contact_address && (
                   <div className="flex items-start gap-3">
                     <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{vehicle.workshop.contact_address}</p>
+                    <p>{defaultWorkshop.contact_address}</p>
                   </div>
                 )}
-                {vehicle.workshop.website && (
-                  <a href={vehicle.workshop.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                {defaultWorkshop.website && (
+                  <a href={defaultWorkshop.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                     Visit Website
                   </a>
                 )}
@@ -393,9 +413,9 @@ export default function PublicVehiclePage() {
 
       <footer className="border-t bg-card mt-12">
         <div className="container py-6 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} {vehicle.workshop.name}</p>
-          {vehicle.workshop.footer_info && <p className="mt-1">{vehicle.workshop.footer_info}</p>}
-          <p className="mt-1 text-xs">{vehicle.workshop.powered_by || "Powered by Torque Log"}</p>
+          <p>© {new Date().getFullYear()} {defaultWorkshop.name}</p>
+          {defaultWorkshop.footer_info && <p className="mt-1">{defaultWorkshop.footer_info}</p>}
+          <p className="mt-1 text-xs">{defaultWorkshop.powered_by || "Powered by Torque Log"}</p>
         </div>
       </footer>
     </div>

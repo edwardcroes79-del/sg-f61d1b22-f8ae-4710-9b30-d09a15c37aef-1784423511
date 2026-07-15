@@ -156,10 +156,6 @@ export async function uploadVehicleImage(file: File) {
   return publicUrl;
 }
 
-function buildWorkshopQuery() {
-  return supabase.rpc("get_workshop_vehicles");
-}
-
 export async function getVehicleCount(): Promise<number> {
   const workshopId = await getUserWorkshopId();
   const { count, error } = await supabase

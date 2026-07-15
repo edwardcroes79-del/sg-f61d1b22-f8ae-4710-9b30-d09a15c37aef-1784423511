@@ -112,10 +112,18 @@ async function getUserWorkshopId(): Promise<string> {
 export async function getServiceRecordCount(): Promise<number> {
   const workshopId = await getUserWorkshopId();
 
+  const { data: vehicleIds, error: vehicleError } = await supabase
+    .from("vehicles")
+    .select("id")
+    .eq("workshop_id", workshopId);
+
+  if (vehicleError) throw vehicleError;
+  if (!vehicleIds || vehicleIds.length === 0) return 0;
+
   const { count, error } = await supabase
     .from("service_records")
     .select("id", { count: "exact", head: true })
-    .eq("vehicle_id.workshop_id", workshopId);
+    .in("vehicle_id", vehicleIds.map((v) => v.id));
 
   if (error) throw error;
   return count || 0;

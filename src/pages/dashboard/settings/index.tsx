@@ -85,8 +85,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleUpdateEmail(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleUpdateEmail() {
     if (!account.email.trim()) {
       toast({ title: "Enter a new email address", variant: "destructive" });
       return;
@@ -103,8 +102,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleUpdatePassword(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleUpdatePassword() {
     if (account.newPassword.length < 6) {
       toast({ title: "Password must be at least 6 characters", variant: "destructive" });
       return;
@@ -282,17 +280,15 @@ export default function SettingsPage() {
                   Change Email
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpdateEmail} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-email">New Email Address</Label>
-                    <Input id="new-email" type="email" value={account.email} onChange={(e) => setAccount((prev) => ({ ...prev, email: e.target.value }))} placeholder="admin@workshop.com" />
-                  </div>
-                  <Button type="submit" disabled={updatingEmail} className="w-full">
-                    {updatingEmail && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {updatingEmail ? "Sending..." : "Update Email"}
-                  </Button>
-                </form>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-email">New Email Address</Label>
+                  <Input id="new-email" type="email" value={account.email} onChange={(e) => setAccount((prev) => ({ ...prev, email: e.target.value }))} placeholder="admin@workshop.com" />
+                </div>
+                <Button type="button" onClick={handleUpdateEmail} disabled={updatingEmail} className="w-full">
+                  {updatingEmail && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {updatingEmail ? "Sending..." : "Update Email"}
+                </Button>
               </CardContent>
             </Card>
 
@@ -303,21 +299,19 @@ export default function SettingsPage() {
                   Change Password
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpdatePassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" value={account.newPassword} onChange={(e) => setAccount((prev) => ({ ...prev, newPassword: e.target.value }))} placeholder="••••••••" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
-                    <Input id="confirm-password" type="password" value={account.confirmPassword} onChange={(e) => setAccount((prev) => ({ ...prev, confirmPassword: e.target.value }))} placeholder="••••••••" />
-                  </div>
-                  <Button type="submit" disabled={updatingPassword} className="w-full">
-                    {updatingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {updatingPassword ? "Updating..." : "Update Password"}
-                  </Button>
-                </form>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input id="new-password" type="password" value={account.newPassword} onChange={(e) => setAccount((prev) => ({ ...prev, newPassword: e.target.value }))} placeholder="••••••••" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Input id="confirm-password" type="password" value={account.confirmPassword} onChange={(e) => setAccount((prev) => ({ ...prev, confirmPassword: e.target.value }))} placeholder="••••••••" />
+                </div>
+                <Button type="button" onClick={handleUpdatePassword} disabled={updatingPassword} className="w-full">
+                  {updatingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {updatingPassword ? "Updating..." : "Update Password"}
+                </Button>
               </CardContent>
             </Card>
           </div>

@@ -33,6 +33,7 @@ import {
   Paintbrush,
   Wrench,
 } from "lucide-react";
+import { ServiceRecordSection } from "@/components/dashboard/ServiceRecordSection";
 
 export default function VehicleDetailPage() {
   const router = useRouter();
@@ -255,6 +256,8 @@ export default function VehicleDetailPage() {
             </Card>
           </div>
         </div>
+
+        <ServiceRecordSection vehicleId={vehicle.id} />
       </div>
 
       <Dialog open={showDelete} onOpenChange={setShowDelete}>

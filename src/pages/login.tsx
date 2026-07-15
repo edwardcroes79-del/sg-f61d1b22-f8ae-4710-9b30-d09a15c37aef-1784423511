@@ -31,6 +31,32 @@ function hexToHsl(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+const defaultBrand = {
+  name: "Torque Log",
+  logo_url: "",
+  primary_color: "#D97706",
+  secondary_color: "#64748B",
+};
+
+function loadCachedBrand() {
+  if (typeof window === "undefined") return defaultBrand;
+  try {
+    const cached = localStorage.getItem("torque_brand");
+    return cached ? { ...defaultBrand, ...JSON.parse(cached) } : defaultBrand;
+  } catch {
+    return defaultBrand;
+  }
+}
+
+function cacheBrand(brand: typeof defaultBrand) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("torque_brand", JSON.stringify(brand));
+  } catch {
+    // ignore
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "reset">("login");
@@ -39,19 +65,27 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [brand, setBrand] = useState<{
-    name: string;
-    logo_url?: string;
-    primary_color?: string;
-    secondary_color?: string;
-  } | null>(null);
+  const [brand, setBrand] = useState<typeof defaultBrand>(loadCachedBrand);
+  const [brandLoading, setBrandLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadBrand() {
-      const { data } = await supabase.from("workshops").select("name, logo_url, primary_color, secondary_color").limit(1).maybeSingle();
-      setBrand(data || { name: "Torque Log", primary_color: "#D97706", secondary_color: "#64748B" });
+      const { data } = await supabase
+        .from("workshops")
+        .select("name, logo_url, primary_color, secondary_color")
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      const loaded = data || defaultBrand;
+      setBrand(loaded);
+      cacheBrand(loaded);
+      setBrandLoading(false);
     }
     loadBrand();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleLogin(e: React.FormEvent) {
@@ -86,7 +120,7 @@ export default function LoginPage() {
     }
   }
 
-  const primaryStyle = brand?.primary_color
+  const primaryStyle = brand.primary_color
     ? ({
         ["--primary" as string]: hexToHsl(brand.primary_color),
         ["--accent" as string]: hexToHsl(brand.primary_color),
@@ -99,14 +133,18 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4" style={primaryStyle}>
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          {brand?.logo_url ? (
+          {brand.logo_url ? (
             <img src={brand.logo_url} alt={brand.name} className="h-10 w-auto object-contain" />
           ) : (
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              {brand?.name ? <span className="text-primary-foreground font-heading font-bold text-lg">{brand.name.charAt(0)}</span> : <Wrench className="w-5 h-5 text-primary-foreground" />}
+              {brand.name ? (
+                <span className="text-primary-foreground font-heading font-bold text-lg">{brand.name.charAt(0)}</span>
+              ) : (
+                <Wrench className="w-5 h-5 text-primary-foreground" />
+              )}
             </div>
           )}
-          <span className="font-heading font-semibold text-2xl tracking-tight">{brand?.name || "Torque Log"}</span>
+          <span className="font-heading font-semibold text-2xl tracking-tight">{brand.name}</span>
         </div>
 
         <Card className="border-border/50 shadow-lg">

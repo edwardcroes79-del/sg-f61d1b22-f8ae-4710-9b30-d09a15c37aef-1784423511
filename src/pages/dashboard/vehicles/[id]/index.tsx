@@ -136,8 +136,11 @@ export default function VehicleDetailPage() {
               <Car className="w-20 h-20 text-muted-foreground/30" />
             </div>
           )}
-          <div className="absolute bottom-4 left-4">
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 flex-wrap">
             <Badge className="text-base px-3 py-1 font-mono tracking-wider bg-background/90 text-foreground">
+              {vehicle.year || "—"}
+            </Badge>
+            <Badge className="text-base px-3 py-1 font-mono tracking-wider bg-primary text-primary-foreground">
               {vehicle.registration_number}
             </Badge>
           </div>

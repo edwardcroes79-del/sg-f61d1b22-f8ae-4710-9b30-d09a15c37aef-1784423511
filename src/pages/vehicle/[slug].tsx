@@ -253,8 +253,8 @@ export default function PublicVehiclePage() {
                         </CardTitle>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" /> {formatDate(record.service_date)}</span>
-                          {record.odometer_mileage !== undefined && (
-                            <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.odometer_mileage)} km</span>
+                          {record.mileage !== undefined && (
+                            <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.mileage)} km</span>
                           )}
                           {record.technician && (
                             <span className="flex items-center gap-1"><User className="w-3 h-3" /> {record.technician}</span>
@@ -282,10 +282,10 @@ export default function PublicVehiclePage() {
                             </div>
                           )}
                         </div>
-                        {record.service_images && record.service_images.length > 0 && (
+                        {record.attachments && record.attachments.length > 0 && (
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3">
-                            {record.service_images.map((img) => (
-                              <img key={img.id} src={img.image_url} alt="Service" className="rounded-lg aspect-square object-cover border" />
+                            {record.attachments.map((url, idx) => (
+                              <img key={idx} src={url} alt="Service" className="rounded-lg aspect-square object-cover border" />
                             ))}
                           </div>
                         )}

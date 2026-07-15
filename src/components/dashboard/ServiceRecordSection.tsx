@@ -18,37 +18,20 @@ import {
   updateServiceRecord,
   deleteServiceRecord,
   uploadServiceImage,
-  addServiceImage,
 } from "@/services/serviceRecordService";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, formatMileage } from "@/lib/utils";
 import { Plus, Wrench, Calendar, Gauge, User, FileText, Trash2, Edit, X, ImagePlus } from "lucide-react";
+import type { ServiceRecord } from "@/services/serviceRecordService";
 
 interface ServiceRecordSectionProps {
   vehicleId: string;
 }
 
-interface ServiceRecordWithImages {
-  id: string;
-  vehicle_id: string;
-  service_date: string;
-  odometer_mileage?: number;
-  service_type: string;
-  technician?: string;
-  work_performed?: string;
-  parts_replaced?: string;
-  fluids_changed?: string;
-  labour_notes?: string;
-  recommendations?: string;
-  invoice_number?: string;
-  total_cost?: number;
-  service_images: { id: string; image_url: string }[];
-}
-
 const emptyForm = {
   id: "",
   service_date: new Date().toISOString().slice(0, 10),
-  odometer_mileage: "",
+  mileage: "",
   service_type: "",
   technician: "",
   work_performed: "",
@@ -62,7 +45,7 @@ const emptyForm = {
 
 export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
   const { toast } = useToast();
-  const [records, setRecords] = useState<ServiceRecordWithImages[]>([]);
+  const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -79,7 +62,7 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
     setLoading(true);
     try {
       const data = await getServiceRecords(vehicleId);
-      setRecords(data as ServiceRecordWithImages[]);
+      setRecords(data);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -94,11 +77,11 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
     setDialogOpen(true);
   }
 
-  function openEdit(record: ServiceRecordWithImages) {
+  function openEdit(record: ServiceRecord) {
     setForm({
       id: record.id,
       service_date: record.service_date.slice(0, 10),
-      odometer_mileage: record.odometer_mileage?.toString() || "",
+      mileage: record.mileage?.toString() || "",
       service_type: record.service_type,
       technician: record.technician || "",
       work_performed: record.work_performed || "",
@@ -110,7 +93,7 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
       total_cost: record.total_cost?.toString() || "",
     });
     setImages([]);
-    setImagePreviews(record.service_images?.map((img) => img.image_url) || []);
+    setImagePreviews(record.attachments || []);
     setDialogOpen(true);
   }
 
@@ -141,7 +124,7 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
       const recordData = {
         vehicle_id: vehicleId,
         service_date: form.service_date,
-        odometer_mileage: form.odometer_mileage ? parseInt(form.odometer_mileage) : undefined,
+        mileage: form.mileage ? parseInt(form.mileage) : undefined,
         service_type: form.service_type,
         technician: form.technician || undefined,
         work_performed: form.work_performed || undefined,
@@ -161,9 +144,17 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
         recordId = created.id;
       }
 
+      const uploadedUrls: string[] = [];
       for (const file of images) {
         const url = await uploadServiceImage(file);
-        await addServiceImage(recordId, url);
+        uploadedUrls.push(url);
+      }
+
+      if (uploadedUrls.length > 0) {
+        const currentAttachments = records.find((r) => r.id === recordId)?.attachments || [];
+        await updateServiceRecord(recordId, {
+          attachments: [...currentAttachments, ...uploadedUrls],
+        });
       }
 
       toast({ title: form.id ? "Service record updated" : "Service record added" });
@@ -234,8 +225,8 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(record.service_date)}</span>
-                  {record.odometer_mileage !== undefined && (
-                    <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.odometer_mileage)} km</span>
+                  {record.mileage !== undefined && (
+                    <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.mileage)} km</span>
                   )}
                   {record.technician && (
                     <span className="flex items-center gap-1"><User className="w-3 h-3" /> {record.technician}</span>
@@ -291,10 +282,10 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
                     )}
                   </div>
                 )}
-                {record.service_images && record.service_images.length > 0 && (
+                {record.attachments && record.attachments.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3">
-                    {record.service_images.map((img) => (
-                      <img key={img.id} src={img.image_url} alt="Service" className="rounded-lg aspect-square object-cover border" />
+                    {record.attachments.map((url, idx) => (
+                      <img key={idx} src={url} alt="Service" className="rounded-lg aspect-square object-cover border" />
                     ))}
                   </div>
                 )}
@@ -321,8 +312,8 @@ export function ServiceRecordSection({ vehicleId }: ServiceRecordSectionProps) {
                 <Input id="service_type" value={form.service_type} onChange={(e) => handleChange("service_type", e.target.value)} placeholder="e.g. Full Service" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="odometer_mileage">Odometer (km)</Label>
-                <Input id="odometer_mileage" type="number" value={form.odometer_mileage} onChange={(e) => handleChange("odometer_mileage", e.target.value)} />
+                <Label htmlFor="mileage">Odometer (km)</Label>
+                <Input id="mileage" type="number" value={form.mileage} onChange={(e) => handleChange("mileage", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="technician">Technician</Label>

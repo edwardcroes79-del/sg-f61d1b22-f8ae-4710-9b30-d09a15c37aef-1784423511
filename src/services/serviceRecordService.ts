@@ -4,7 +4,7 @@ export interface ServiceRecord {
   id: string;
   vehicle_id: string;
   service_date: string;
-  odometer_mileage?: number;
+  mileage?: number;
   service_type: string;
   technician?: string;
   work_performed?: string;
@@ -22,12 +22,12 @@ export interface ServiceRecord {
 export async function getServiceRecords(vehicleId: string) {
   const { data, error } = await supabase
     .from("service_records")
-    .select("*, service_images(*)")
+    .select("*")
     .eq("vehicle_id", vehicleId)
     .order("service_date", { ascending: false });
 
   if (error) throw error;
-  return (data || []) as unknown as (ServiceRecord & { service_images: { id: string; image_url: string }[] })[];
+  return (data || []) as ServiceRecord[];
 }
 
 export async function createServiceRecord(record: Omit<ServiceRecord, "id" | "created_at" | "updated_at">) {

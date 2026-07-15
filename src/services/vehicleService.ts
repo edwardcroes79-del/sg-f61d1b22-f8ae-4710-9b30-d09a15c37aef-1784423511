@@ -183,16 +183,19 @@ export async function getDueSoonVehicles(): Promise<VehicleWithCustomer[]> {
   if (dateError) throw dateError;
 
   // Vehicles with next_service_mileage <= current_mileage (overdue by mileage)
-  const { data: mileageDue, error: mileageError } = await supabase
+  const { data: mileageCandidates, error: mileageError } = await supabase
     .from("vehicles")
     .select("*, customer:customers(id, full_name, phone_number)")
     .eq("workshop_id", workshopId)
     .not("next_service_mileage", "is", null)
     .not("current_mileage", "is", null)
-    .or("next_service_mileage.lte.current_mileage")
     .order("next_service_mileage", { ascending: true });
 
   if (mileageError) throw mileageError;
+
+  const mileageDue = (mileageCandidates || []).filter(
+    (v) => (v.next_service_mileage ?? Infinity) <= (v.current_mileage ?? 0)
+  );
 
   const combinedMap = new Map<string, VehicleWithCustomer>();
   for (const v of dateDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);

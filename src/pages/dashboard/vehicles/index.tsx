@@ -22,6 +22,7 @@ import {
 import { getVehicles, deleteVehicle, type VehicleWithCustomer } from "@/services/vehicleService";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getServiceStatus } from "@/lib/utils";
+import { useWorkshop } from "@/contexts/WorkshopContext";
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<VehicleWithCustomer[]>([]);
@@ -29,6 +30,7 @@ export default function VehiclesPage() {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { workshop } = useWorkshop();
 
   async function loadVehicles() {
     setLoading(true);
@@ -66,7 +68,7 @@ export default function VehiclesPage() {
             <p className="text-muted-foreground">Manage registered vehicles and QR codes</p>
           </div>
           <Link href="/dashboard/vehicles/new">
-            <Button>
+            <Button className="min-h-[44px]">
               <Plus className="w-4 h-4 mr-2" />
               Add Vehicle
             </Button>
@@ -128,21 +130,21 @@ export default function VehiclesPage() {
                     <div className="absolute top-3 right-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="secondary" size="icon" className="h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/vehicles/${vehicle.id}`}>View Details</Link>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
+                            <Link href={`/dashboard/vehicles/${vehicle.id}`} className="w-full">View Details</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/vehicles/${vehicle.id}/edit`}>Edit</Link>
+                          <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
+                            <Link href={`/dashboard/vehicles/${vehicle.id}/edit`} className="w-full">Edit</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/vehicle/${vehicle.slug}`} target="_blank">Open Public Page</Link>
+                          <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
+                            <Link href={`/vehicle/${vehicle.slug}`} target="_blank" className="w-full">Open Public Page</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteId(vehicle.id)} className="text-danger focus:text-danger">
+                          <DropdownMenuItem onClick={() => setDeleteId(vehicle.id)} className="cursor-pointer text-danger focus:bg-danger/10 focus:text-danger">
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
                           </DropdownMenuItem>

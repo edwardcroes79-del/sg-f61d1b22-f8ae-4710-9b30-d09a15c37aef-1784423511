@@ -171,47 +171,47 @@ export default function PublicVehiclePage() {
   return (
     <div className="min-h-screen bg-background" style={primaryStyle}>
       <header className="bg-card border-b">
-        <div className="container py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="container py-3 md:py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
             {defaultWorkshop.logo_url ? (
-              <img src={defaultWorkshop.logo_url} alt={defaultWorkshop.name} className="h-10 w-auto object-contain" />
+              <img src={defaultWorkshop.logo_url} alt={defaultWorkshop.name} className="h-8 md:h-10 w-auto object-contain shrink-0" />
             ) : (
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Car className="w-5 h-5 text-primary" />
+              <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Car className="w-4 h-4 md:w-5 md:h-5 text-primary" />
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="font-heading font-semibold leading-tight truncate">{defaultWorkshop.name}</h1>
-              <p className="text-xs text-muted-foreground">Digital Service Record</p>
+              <h1 className="font-heading font-semibold text-sm md:text-base leading-tight truncate">{defaultWorkshop.name}</h1>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Digital Service Record</p>
             </div>
           </div>
-          <Badge variant="outline" className="font-mono shrink-0 text-sm">
+          <Badge variant="outline" className="font-mono shrink-0 text-xs md:text-sm px-2 py-1">
             {vehicle.registration_number}
           </Badge>
         </div>
       </header>
 
-      <main className="container py-8 space-y-8">
-        <section className="relative h-64 md:h-80 rounded-3xl overflow-hidden bg-muted">
+      <main className="container py-4 md:py-8 space-y-6 md:space-y-8">
+        <section className="relative h-56 sm:h-64 md:h-80 rounded-2xl md:rounded-3xl overflow-hidden bg-muted">
           {vehicle.header_image_url ? (
             <img src={vehicle.header_image_url} alt={`${vehicle.make} ${vehicle.model}`} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Car className="w-24 h-24 text-muted-foreground/30" />
+              <Car className="w-16 h-16 md:w-24 md:h-24 text-muted-foreground/30" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <p className="text-sm opacity-90 mb-1">{defaultWorkshop.name}</p>
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-3">
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-white">
+            <p className="text-xs md:text-sm opacity-90 mb-1">{defaultWorkshop.name}</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-semibold mb-2 md:mb-3">
               {vehicle.make} {vehicle.model}
             </h2>
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <Badge className="bg-white/20 text-white border-white/30 font-mono text-base px-3 py-1">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
+              <Badge className="bg-white/20 text-white border-white/30 font-mono text-sm px-2.5 py-1">
                 {vehicle.registration_number}
               </Badge>
-              <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {defaultCustomer.full_name}</span>
-              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {vehicle.year || "—"}</span>
+              <span className="flex items-center gap-1"><User className="w-3 h-3 md:w-3.5 md:h-3.5" /> {defaultCustomer.full_name}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 md:w-3.5 md:h-3.5" /> {vehicle.year || "—"}</span>
             </div>
           </div>
         </section>

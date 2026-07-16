@@ -69,18 +69,20 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex" style={brandStyle}>
-      <Sidebar />
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
-        <main className="flex-1 p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
           {title && (
-            <div className="mb-6">
-              <h1 className="text-2xl font-heading font-semibold">{title}</h1>
+            <div className="mb-4 md:mb-6">
+              <h1 className="text-xl md:text-2xl font-heading font-semibold">{title}</h1>
             </div>
           )}
-          <div className="animate-fade-in">{children}</div>
+          <div className="animate-fade-in max-w-7xl mx-auto">{children}</div>
         </main>
-        <footer className="border-t bg-card/50 px-6 py-4 text-xs text-muted-foreground flex justify-between items-center">
+        <footer className="border-t bg-card/50 px-4 md:px-6 py-4 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-2">
           <span>© {new Date().getFullYear()} {workshop?.name || "Torque Log"}</span>
           <span>{workshop?.powered_by || "Powered by Torque Log"}</span>
         </footer>

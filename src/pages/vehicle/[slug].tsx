@@ -216,16 +216,16 @@ export default function PublicVehiclePage() {
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <Card className="card-premium">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Car className="w-5 h-5 text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <Car className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Vehicle Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
+              <CardContent className="grid gap-3 sm:gap-4 sm:grid-cols-2 p-4 sm:p-6 pt-0">
                 <Spec label="Make" value={vehicle.make} icon={Car} />
                 <Spec label="Model" value={vehicle.model} icon={Car} />
                 <Spec label="Year" value={vehicle.year?.toString() || "—"} icon={Calendar} />
@@ -238,94 +238,94 @@ export default function PublicVehiclePage() {
             </Card>
 
             <Card className="card-premium">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="w-5 h-5 text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Driver Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
                 <div className="flex items-start gap-3">
-                  <User className="w-4 h-4 text-muted-foreground mt-1" />
-                  <p className="font-medium">{defaultCustomer.full_name}</p>
+                  <User className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+                  <p className="font-medium break-words">{defaultCustomer.full_name}</p>
                 </div>
                 {defaultCustomer.phone_number && (
                   <div className="flex items-start gap-3">
-                    <Phone className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{defaultCustomer.phone_number}</p>
+                    <Phone className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+                    <p className="break-words">{defaultCustomer.phone_number}</p>
                   </div>
                 )}
                 {defaultCustomer.email && (
                   <div className="flex items-start gap-3">
-                    <Mail className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{defaultCustomer.email}</p>
+                    <Mail className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+                    <p className="break-words">{defaultCustomer.email}</p>
                   </div>
                 )}
                 {defaultCustomer.address && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
-                    <p>{defaultCustomer.address}</p>
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+                    <p className="break-words">{defaultCustomer.address}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             <div>
-              <h2 className="text-xl font-heading font-semibold mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-heading font-semibold mb-3 sm:mb-4 flex items-center gap-2 px-1">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 Service History
               </h2>
               {records.length === 0 ? (
                 <Card className="card-premium">
-                  <CardContent className="py-10 text-center text-muted-foreground">
+                  <CardContent className="py-10 sm:py-12 text-center text-muted-foreground text-sm">
                     No service records yet.
                   </CardContent>
                 </Card>
               ) : (
-                <div className="relative space-y-6">
+                <div className="relative space-y-4 sm:space-y-6">
                   {records.map((record, idx) => (
-                    <div key={record.id} className="relative pl-8 md:pl-10">
-                      <div className="absolute left-3 md:left-4 top-0 bottom-0 w-0.5 bg-muted" aria-hidden="true" />
-                      <div className="absolute left-1 md:left-2 top-6 w-4 h-4 rounded-full bg-primary border-4 border-background z-10" />
+                    <div key={record.id} className="relative pl-6 sm:pl-8 md:pl-10">
+                      <div className="absolute left-2 sm:left-3 md:left-4 top-0 bottom-0 w-0.5 bg-muted" aria-hidden="true" />
+                      <div className="absolute left-0 sm:left-1 md:left-2 top-5 sm:top-6 w-4 h-4 rounded-full bg-primary border-4 border-background z-10" />
                       <Card className="card-premium">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Wrench className="w-4 h-4 text-primary" />
-                            {record.service_type}
+                        <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
+                          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                            <Wrench className="w-4 h-4 text-primary shrink-0" />
+                            <span className="break-words">{record.service_type}</span>
                           </CardTitle>
-                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3" /> {formatDate(record.service_date)}</span>
+                          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1"><CalendarDays className="w-3 h-3 shrink-0" /> {formatDate(record.service_date)}</span>
                             {record.mileage !== undefined && (
-                              <span className="flex items-center gap-1"><Gauge className="w-3 h-3" /> {formatMileage(record.mileage)} km</span>
+                              <span className="flex items-center gap-1"><Gauge className="w-3 h-3 shrink-0" /> {formatMileage(record.mileage)} km</span>
                             )}
                             {record.technician && (
-                              <span className="flex items-center gap-1"><User className="w-3 h-3" /> {record.technician}</span>
+                              <span className="flex items-center gap-1"><User className="w-3 h-3 shrink-0" /> {record.technician}</span>
                             )}
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
                           {record.work_performed && (
                             <div>
                               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Work Performed</p>
-                              <p className="text-sm whitespace-pre-line">{record.work_performed}</p>
+                              <p className="text-sm whitespace-pre-line break-words">{record.work_performed}</p>
                             </div>
                           )}
-                          <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                             {record.parts_replaced && (
                               <div>
                                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Parts Replaced</p>
-                                <p className="text-sm whitespace-pre-line">{record.parts_replaced}</p>
+                                <p className="text-sm whitespace-pre-line break-words">{record.parts_replaced}</p>
                               </div>
                             )}
                             {record.fluids_changed && (
                               <div>
                                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Fluids Changed</p>
-                                <p className="text-sm whitespace-pre-line">{record.fluids_changed}</p>
+                                <p className="text-sm whitespace-pre-line break-words">{record.fluids_changed}</p>
                               </div>
                             )}
                           </div>
                           {record.attachments && record.attachments.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 pt-2 sm:pt-3">
                               {record.attachments.map((url, idx) => (
                                 <img key={idx} src={url} alt="Service" className="rounded-lg aspect-square object-cover border" />
                               ))}
@@ -340,16 +340,16 @@ export default function PublicVehiclePage() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <Card className={cn("card-premium border-l-4", status.status === "overdue" ? "border-l-danger" : status.status === "due" ? "border-l-warning" : "border-l-success")}>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Gauge className="w-5 h-5 text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <Gauge className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Service Status
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="flex justify-between items-center">
+              <CardContent className="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Status</span>
                   <Badge className={status.color}>
                     {status.status === "overdue" ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
@@ -357,61 +357,61 @@ export default function PublicVehiclePage() {
                   </Badge>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Service due progress</span>
-                    <span className="font-mono">{Math.round(progress)}%</span>
+                    <span className="font-mono tabular-nums">{Math.round(progress)}%</span>
                   </div>
                   <Progress value={progress} className="h-2" />
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Last Service</span>
-                  <span className="font-medium">
+                  <span className="font-medium tabular-nums">
                     {records[0] ? formatDate(records[0].service_date) : "—"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Next Service Date</span>
-                  <span className="font-medium">
+                  <span className="font-medium tabular-nums">
                     {vehicle.next_service_date ? formatDate(vehicle.next_service_date) : "—"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Next Service Mileage</span>
                   <span className="font-mono font-medium tabular-nums">
                     {vehicle.next_service_mileage ? `${formatMileage(vehicle.next_service_mileage)} km` : "—"}
                   </span>
                 </div>
-                <div className={cn("p-4 rounded-xl text-center", status.color)}>
+                <div className={cn("p-3 sm:p-4 rounded-xl text-center text-sm", status.color)}>
                   <p className="font-semibold">{status.message}</p>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="card-premium">
-              <CardHeader>
-                <CardTitle className="text-lg">Contact</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base sm:text-lg">Contact</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-3 text-sm p-4 sm:p-6 pt-0">
                 {defaultWorkshop.contact_phone && (
                   <div className="flex items-start gap-3">
-                    <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{defaultWorkshop.contact_phone}</p>
+                    <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="break-words">{defaultWorkshop.contact_phone}</p>
                   </div>
                 )}
                 {defaultWorkshop.contact_email && (
                   <div className="flex items-start gap-3">
-                    <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{defaultWorkshop.contact_email}</p>
+                    <Mail className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="break-words">{defaultWorkshop.contact_email}</p>
                   </div>
                 )}
                 {defaultWorkshop.contact_address && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                    <p>{defaultWorkshop.contact_address}</p>
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="break-words">{defaultWorkshop.contact_address}</p>
                   </div>
                 )}
                 {defaultWorkshop.website && (
-                  <a href={defaultWorkshop.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a href={defaultWorkshop.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-block min-h-[44px] flex items-center">
                     Visit Website
                   </a>
                 )}
@@ -421,10 +421,10 @@ export default function PublicVehiclePage() {
         </div>
       </main>
 
-      <footer className="border-t bg-card mt-12">
-        <div className="container py-6 text-center text-sm text-muted-foreground">
+      <footer className="border-t bg-card mt-8 sm:mt-12">
+        <div className="container py-4 sm:py-6 text-center text-xs sm:text-sm text-muted-foreground px-4">
           <p>© {new Date().getFullYear()} {defaultWorkshop.name}</p>
-          {defaultWorkshop.footer_info && <p className="mt-1">{defaultWorkshop.footer_info}</p>}
+          {defaultWorkshop.footer_info && <p className="mt-1 break-words">{defaultWorkshop.footer_info}</p>}
           <p className="mt-1 text-xs">{defaultWorkshop.powered_by || "Powered by Torque Log"}</p>
         </div>
       </footer>
@@ -434,11 +434,11 @@ export default function PublicVehiclePage() {
 
 function Spec({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
   return (
-    <div className="flex items-start gap-3">
-      <Icon className="w-4 h-4 text-muted-foreground mt-0.5" />
-      <div>
+    <div className="flex items-start gap-2 sm:gap-3">
+      <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+      <div className="min-w-0">
         <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
-        <p className="font-medium">{value}</p>
+        <p className="font-medium break-words">{value}</p>
       </div>
     </div>
   );

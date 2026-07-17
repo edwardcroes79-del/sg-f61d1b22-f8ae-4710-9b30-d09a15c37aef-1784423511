@@ -130,39 +130,39 @@ export default function LoginPage() {
     : {};
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4" style={primaryStyle}>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6" style={primaryStyle}>
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-3 mb-6 sm:mb-8">
           {brand.logo_url ? (
-            <img src={brand.logo_url} alt={brand.name} className="h-10 w-auto object-contain" />
+            <img src={brand.logo_url} alt={brand.name} className="h-12 sm:h-10 w-auto object-contain" />
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center">
               {brand.name ? (
-                <span className="text-primary-foreground font-heading font-bold text-lg">{brand.name.charAt(0)}</span>
+                <span className="text-primary-foreground font-heading font-bold text-xl sm:text-lg">{brand.name.charAt(0)}</span>
               ) : (
-                <Wrench className="w-5 h-5 text-primary-foreground" />
+                <Wrench className="w-6 h-6 sm:w-5 sm:h-5 text-primary-foreground" />
               )}
             </div>
           )}
-          <span className="font-heading font-semibold text-2xl tracking-tight">{brand.name}</span>
+          <span className="font-heading font-semibold text-2xl sm:text-2xl tracking-tight text-center sm:text-left">{brand.name}</span>
         </div>
 
         <Card className="border-border/50 shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="font-heading text-xl">
+          <CardHeader className="space-y-1 p-5 sm:p-6">
+            <CardTitle className="font-heading text-xl sm:text-xl">
               {mode === "login" ? "Welcome back" : "Reset password"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {mode === "login"
                 ? "Sign in to your workshop dashboard"
                 : "Enter your email to receive a reset link"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 sm:p-6 pt-0">
             {mode === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -170,11 +170,11 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-11"
+                    className="h-12 text-base"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -182,22 +182,22 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11"
+                    className="h-12 text-base"
                   />
                 </div>
 
                 {(error || message) && (
-                  <div className={`p-3 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+                  <div className={`p-3 sm:p-4 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
                     {error || message}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-11" disabled={loading}>
+                <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Sign In
                 </Button>
 
-                <div className="text-center">
+                <div className="text-center pt-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -205,7 +205,7 @@ export default function LoginPage() {
                       setError("");
                       setMessage("");
                     }}
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-primary hover:underline min-h-[44px] inline-flex items-center justify-center px-3"
                   >
                     Forgot password?
                   </button>
@@ -214,7 +214,7 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleReset} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
+                  <Label htmlFor="reset-email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="reset-email"
                     type="email"
@@ -222,22 +222,22 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-11"
+                    className="h-12 text-base"
                   />
                 </div>
 
                 {(error || message) && (
-                  <div className={`p-3 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+                  <div className={`p-3 sm:p-4 rounded-lg text-sm ${error ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
                     {error || message}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-11" disabled={loading}>
+                <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Send Reset Link
                 </Button>
 
-                <div className="text-center">
+                <div className="text-center pt-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -245,7 +245,7 @@ export default function LoginPage() {
                       setError("");
                       setMessage("");
                     }}
-                    className="text-sm text-primary hover:underline inline-flex items-center"
+                    className="text-sm text-primary hover:underline inline-flex items-center min-h-[44px] px-3"
                   >
                     <ArrowLeft className="w-3 h-3 mr-1" />
                     Back to sign in
@@ -256,7 +256,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-6 px-4">
           QR-based Vehicle Service Record Management
         </p>
       </div>

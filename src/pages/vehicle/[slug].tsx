@@ -175,6 +175,7 @@ export default function PublicVehiclePage() {
         <title>{defaultWorkshop.name} - {vehicle.make} {vehicle.model}</title>
         <meta name="apple-mobile-web-app-title" content={defaultWorkshop.name} />
         <meta name="theme-color" content={defaultWorkshop.primary_color || "#D97706"} />
+        <link rel="manifest" href={`/api/manifest?slug=${vehicle.slug}`} />
         {defaultWorkshop.logo_url && (
           <>
             <link rel="apple-touch-icon" href={defaultWorkshop.logo_url} />

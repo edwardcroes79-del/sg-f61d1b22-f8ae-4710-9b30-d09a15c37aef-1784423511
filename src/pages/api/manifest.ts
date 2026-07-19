@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { slug } = req.query;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
@@ -41,11 +42,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { src: "/og-image.png", sizes: "1200x630", type: "image/png" },
       ];
 
+  const startUrl = typeof slug === "string" ? `/vehicle/${slug}` : "/";
+
   const manifest = {
     name,
     short_name: shortName,
     description: "Digital Vehicle Service Record",
-    start_url: "/",
+    start_url: startUrl,
     display: "standalone",
     background_color: backgroundColor,
     theme_color: themeColor,

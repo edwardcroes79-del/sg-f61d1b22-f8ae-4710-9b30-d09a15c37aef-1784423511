@@ -1,10 +1,9 @@
 const CACHE_NAME = "torque-log-v1";
-const STATIC_ASSETS = ["/"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(["/", "/offline"]);
     })
   );
   self.skipWaiting();
@@ -28,13 +27,20 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => {
       return (
         cached ||
-        fetch(event.request).then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        })
+        fetch(event.request)
+          .then((response) => {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+            return response;
+          })
+          .catch(() => {
+            if (event.request.mode === "navigate") {
+              return caches.match("/offline") || caches.match("/");
+            }
+            return new Response("Offline", { status: 503 });
+          })
       );
     })
   );

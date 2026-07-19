@@ -65,12 +65,18 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [brand, setBrand] = useState<typeof defaultBrand>(loadCachedBrand);
+  const [brand, setBrand] = useState<typeof defaultBrand>(defaultBrand);
   const [brandLoading, setBrandLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
     async function loadBrand() {
+      const cached = loadCachedBrand();
+      if (cached.name !== defaultBrand.name || cached.primary_color !== defaultBrand.primary_color) {
+        setBrand(cached);
+      }
       const { data } = await supabase
         .from("workshops")
         .select("name, logo_url, primary_color, secondary_color")
@@ -137,7 +143,7 @@ export default function LoginPage() {
             <img src={brand.logo_url} alt={brand.name} className="h-12 sm:h-10 w-auto object-contain" />
           ) : (
             <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center">
-              {brand.name ? (
+              {mounted && brand.name ? (
                 <span className="text-primary-foreground font-heading font-bold text-xl sm:text-lg">{brand.name.charAt(0)}</span>
               ) : (
                 <Wrench className="w-6 h-6 sm:w-5 sm:h-5 text-primary-foreground" />

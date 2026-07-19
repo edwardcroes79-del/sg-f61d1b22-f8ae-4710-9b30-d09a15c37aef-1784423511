@@ -10,7 +10,7 @@ import { getCustomerCount } from "@/services/customerService";
 import { getServiceRecordCount } from "@/services/serviceRecordService";
 import { useToast } from "@/hooks/use-toast";
 import { getServiceStatus, formatDate } from "@/lib/utils";
-import { getQuery, setQuery } from "@/lib/queryCache";
+import { getQuery } from "@/lib/queryCache";
 
 export default function DashboardPage() {
   const { toast } = useToast();

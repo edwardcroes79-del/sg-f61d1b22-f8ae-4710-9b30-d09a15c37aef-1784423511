@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import type { GetServerSideProps } from "next";
+import { createClient } from "@supabase/supabase-js";
 import { signIn, resetPassword } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench, Loader2, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 function hexToHsl(hex: string): string {
   const clean = hex.replace("#", "");
@@ -38,26 +39,31 @@ const defaultBrand = {
   secondary_color: "#64748B",
 };
 
-function loadCachedBrand() {
-  if (typeof window === "undefined") return defaultBrand;
-  try {
-    const cached = localStorage.getItem("torque_brand");
-    return cached ? { ...defaultBrand, ...JSON.parse(cached) } : defaultBrand;
-  } catch {
-    return defaultBrand;
+export const getServerSideProps: GetServerSideProps<{ brand: typeof defaultBrand }> = async () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { props: { brand: defaultBrand } };
   }
-}
 
-function cacheBrand(brand: typeof defaultBrand) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem("torque_brand", JSON.stringify(brand));
-  } catch {
-    // ignore
-  }
-}
+  const serverClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
 
-export default function LoginPage() {
+  const { data } = await serverClient
+    .from("workshops")
+    .select("name, logo_url, primary_color, secondary_color")
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    props: {
+      brand: data || defaultBrand,
+    },
+  };
+};
+
+export default function LoginPage({ brand: serverBrand }: { brand: typeof defaultBrand }) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "reset">("login");
   const [email, setEmail] = useState("");
@@ -65,34 +71,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [brand, setBrand] = useState<typeof defaultBrand>(defaultBrand);
-  const [brandLoading, setBrandLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    let cancelled = false;
-    async function loadBrand() {
-      const cached = loadCachedBrand();
-      if (cached.name !== defaultBrand.name || cached.primary_color !== defaultBrand.primary_color) {
-        setBrand(cached);
-      }
-      const { data } = await supabase
-        .from("workshops")
-        .select("name, logo_url, primary_color, secondary_color")
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      const loaded = data || defaultBrand;
-      setBrand(loaded);
-      cacheBrand(loaded);
-      setBrandLoading(false);
-    }
-    loadBrand();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [brand, setBrand] = useState<typeof defaultBrand>(serverBrand);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -143,7 +122,7 @@ export default function LoginPage() {
             <img src={brand.logo_url} alt={brand.name} className="h-12 sm:h-10 w-auto object-contain" />
           ) : (
             <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center">
-              {mounted && brand.name ? (
+              {brand.name ? (
                 <span className="text-primary-foreground font-heading font-bold text-xl sm:text-lg">{brand.name.charAt(0)}</span>
               ) : (
                 <Wrench className="w-6 h-6 sm:w-5 sm:h-5 text-primary-foreground" />

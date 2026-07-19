@@ -1,6 +1,6 @@
 ---
 title: Image compression and dashboard list caching
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [cost-optimization, performance, images, caching]
@@ -14,16 +14,15 @@ Reduce Supabase storage and database read costs by:
 - Caching dashboard list queries (vehicles, customers, service records) in memory with stale-while-revalidate behavior and mutation invalidation.
 
 ## Checklist
-- [ ] Add `compressImage` helper using canvas with max width/quality.
-- [ ] Add lightweight `queryCache` utility with `getQuery`, `setQuery`, `invalidateQueries`.
-- [ ] Cache vehicle list with keyword key; refresh when keyword changes; invalidate on create/update/delete.
-- [ ] Cache customer list with keyword key; refresh when keyword changes; invalidate on create/update/delete.
-- [ ] Use compressed image for vehicle header upload.
-- [ ] Use compressed images for service-record attachments.
-- [ ] Run check_for_errors.
+- [x] Add `compressImage` helper using canvas with max width/quality.
+- [x] Add lightweight `queryCache` utility with `getQuery`, `setQuery`, `invalidateQueries`.
+- [x] Cache vehicle list with keyword key; refresh when keyword changes; invalidate on create/update/delete.
+- [x] Cache customer list with keyword key; refresh when keyword changes; invalidate on create/update/delete.
+- [x] Use compressed image for vehicle header upload.
+- [x] Use compressed images for service-record attachments.
+- [x] Run check_for_errors.
 
 ## Acceptance
 - Vehicle header uploads are compressed before reaching Supabase Storage.
 - Vehicle/customer lists do not refetch on every navigation within a session.
 - After adding/editing a vehicle or customer, the list updates on next visit.
-</end_of_turn>

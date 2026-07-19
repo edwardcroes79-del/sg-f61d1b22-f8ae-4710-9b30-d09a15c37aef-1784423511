@@ -86,6 +86,41 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          vehicle_slug: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          vehicle_slug: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          vehicle_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_vehicle_slug_fkey"
+            columns: ["vehicle_slug"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       service_images: {
         Row: {
           caption: string | null

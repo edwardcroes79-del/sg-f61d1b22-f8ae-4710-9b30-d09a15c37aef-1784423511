@@ -27,6 +27,9 @@ import {
   CalendarDays,
   Download,
   Share2,
+  Bell,
+  BellOff,
+  Loader2,
   X,
 } from "lucide-react";
 
@@ -108,6 +111,8 @@ export default function PublicVehiclePage() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -121,6 +126,13 @@ export default function PublicVehiclePage() {
 
     if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window.navigator as any).standalone) {
       setShowIosHint(true);
+    }
+
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker.ready.then(async (registration) => {
+        const existing = await registration.pushManager.getSubscription();
+        setSubscribed(!!existing);
+      });
     }
 
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -205,6 +217,59 @@ export default function PublicVehiclePage() {
   const daysTotal = 365;
   const daysRemaining = status.daysRemaining ?? 0;
   const progress = Math.max(0, Math.min(100, ((daysTotal - daysRemaining) / daysTotal) * 100));
+
+  async function handleSubscribe() {
+    if (!vehicle) return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      return;
+    }
+
+    setSubscribing(true);
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        throw new Error("Push notifications are not configured.");
+      }
+
+      const existing = await registration.pushManager.getSubscription();
+      if (existing) {
+        await existing.unsubscribe();
+        setSubscribed(false);
+        setSubscribing(false);
+        return;
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
+
+      const subJson = subscription.toJSON();
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle_slug: vehicle.slug,
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys?.p256dh,
+          auth: subJson.keys?.auth,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save subscription.");
+      }
+
+      setSubscribed(true);
+    } catch (err: any) {
+      console.error("Push subscription failed:", err);
+      alert(err.message || "Could not enable reminders.");
+    } finally {
+      setSubscribing(false);
+    }
+  }
 
   const primaryStyle = defaultWorkshop.primary_color
     ? ({ ["--primary" as string]: hexToHsl(defaultWorkshop.primary_color), ["--accent" as string]: hexToHsl(defaultWorkshop.primary_color), ["--ring" as string]: hexToHsl(defaultWorkshop.primary_color) } as React.CSSProperties)
@@ -437,82 +502,32 @@ export default function PublicVehiclePage() {
                 </Card>
               )}
 
-              <Card className={cn("card-premium border-l-4", status.status === "overdue" ? "border-l-danger" : status.status === "due" ? "border-l-warning" : "border-l-success")}>
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                    <Gauge className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                    Service Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 sm:space-y-5 p-4 sm:p-6 pt-0">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge className={status.color}>
-                      {status.status === "overdue" ? <AlertTriangle className="w-3 h-3 mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
-                      {status.label}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-muted-foreground">Service due progress</span>
-                      <span className="font-mono tabular-nums">{Math.round(progress)}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Last Service</span>
-                    <span className="font-medium tabular-nums">
-                      {records[0] ? formatDate(records[0].service_date) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Next Service Date</span>
-                    <span className="font-medium tabular-nums">
-                      {vehicle.next_service_date ? formatDate(vehicle.next_service_date) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Next Service Mileage</span>
-                    <span className="font-mono font-medium tabular-nums">
-                      {vehicle.next_service_mileage ? `${formatMileage(vehicle.next_service_mileage)} km` : "—"}
-                    </span>
-                  </div>
-                  <div className={cn("p-3 sm:p-4 rounded-xl text-center text-sm", status.color)}>
-                    <p className="font-semibold">{status.message}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-premium">
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-base sm:text-lg">Contact</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm p-4 sm:p-6 pt-0">
-                  {defaultWorkshop.contact_phone && (
-                    <div className="flex items-start gap-3">
-                      <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="break-words">{defaultWorkshop.contact_phone}</p>
-                    </div>
-                  )}
-                  {defaultWorkshop.contact_email && (
-                    <div className="flex items-start gap-3">
-                      <Mail className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="break-words">{defaultWorkshop.contact_email}</p>
-                    </div>
-                  )}
-                  {defaultWorkshop.contact_address && (
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="break-words">{defaultWorkshop.contact_address}</p>
-                    </div>
-                  )}
-                  {defaultWorkshop.website && (
-                    <a href={defaultWorkshop.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-block min-h-[44px] flex items-center">
-                      Visit Website
-                    </a>
-                  )}
-                </CardContent>
-              </Card>
+              {"PushManager" in (typeof window !== "undefined" ? window : {}) && (
+                <Card className="card-premium">
+                  <CardHeader className="p-4 sm:p-6 pb-2">
+                    <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                      {subscribed ? <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-success" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
+                      Service Reminders
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
+                    <p className="text-sm text-muted-foreground">
+                      {subscribed
+                        ? "You'll receive a reminder the day before your next service is due."
+                        : "Get notified one day before your vehicle is due for service."}
+                    </p>
+                    <Button
+                      onClick={handleSubscribe}
+                      disabled={subscribing}
+                      variant={subscribed ? "outline" : "default"}
+                      className="w-full h-12 text-base"
+                    >
+                      {subscribing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {subscribed ? "Turn Off Reminders" : "Remind Me"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </main>
@@ -539,4 +554,15 @@ function Spec({ label, value, icon: Icon }: { label: string; value: string; icon
       </div>
     </div>
   );
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }

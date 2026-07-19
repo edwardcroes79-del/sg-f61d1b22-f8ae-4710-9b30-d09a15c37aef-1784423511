@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/imageCompression";
 
 export interface ServiceRecord {
   id: string;
@@ -59,13 +60,14 @@ export async function deleteServiceRecord(id: string) {
 }
 
 export async function uploadServiceImage(file: File) {
-  const fileExt = file.name.split(".").pop();
+  const compressed = await compressImage(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+  const fileExt = compressed.name.split(".").pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `service-images/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from("service-images")
-    .upload(filePath, file);
+    .upload(filePath, compressed);
 
   if (uploadError) throw uploadError;
 

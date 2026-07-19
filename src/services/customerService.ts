@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getQuery, invalidateQueries } from "@/lib/queryCache";
 
 export interface Customer {
   id: string;
@@ -38,20 +39,23 @@ async function getUserWorkshopId(): Promise<string> {
 }
 
 export async function getCustomers(search?: string) {
-  let query = supabase
-    .from("customers")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const cacheKey = `customers:list:${search || ""}`;
+  return getQuery(cacheKey, async () => {
+    let query = supabase
+      .from("customers")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (search) {
-    query = query.or(
-      `full_name.ilike.%${search}%,phone_number.ilike.%${search}%,email.ilike.%${search}%`
-    );
-  }
+    if (search) {
+      query = query.or(
+        `full_name.ilike.%${search}%,phone_number.ilike.%${search}%,email.ilike.%${search}%`
+      );
+    }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data || []) as Customer[];
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []) as Customer[];
+  });
 }
 
 export async function getCustomer(id: string) {
@@ -75,6 +79,7 @@ export async function createCustomer(customer: Omit<Customer, "id" | "created_at
     .single();
 
   if (error) throw error;
+  invalidateCustomersCache();
   return data as Customer;
 }
 
@@ -87,6 +92,7 @@ export async function updateCustomer(id: string, customer: Partial<Omit<Customer
     .single();
 
   if (error) throw error;
+  invalidateCustomersCache();
   return data as Customer;
 }
 
@@ -97,15 +103,23 @@ export async function deleteCustomer(id: string) {
     .eq("id", id);
 
   if (error) throw error;
+  invalidateCustomersCache();
+}
+
+export function invalidateCustomersCache(): void {
+  invalidateQueries("customers:");
 }
 
 export async function getCustomerCount(): Promise<number> {
   const workshopId = await getUserWorkshopId();
-  const { count, error } = await supabase
-    .from("customers")
-    .select("*", { count: "exact", head: true })
-    .eq("workshop_id", workshopId);
+  const cacheKey = `customers:count:${workshopId}`;
+  return getQuery(cacheKey, async () => {
+    const { count, error } = await supabase
+      .from("customers")
+      .select("*", { count: "exact", head: true })
+      .eq("workshop_id", workshopId);
 
-  if (error) throw error;
-  return count || 0;
+    if (error) throw error;
+    return count || 0;
+  });
 }

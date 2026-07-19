@@ -10,6 +10,7 @@ import { getCustomerCount } from "@/services/customerService";
 import { getServiceRecordCount } from "@/services/serviceRecordService";
 import { useToast } from "@/hooks/use-toast";
 import { getServiceStatus, formatDate } from "@/lib/utils";
+import { getQuery, setQuery } from "@/lib/queryCache";
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -27,10 +28,10 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const [vehicles, customers, services, dueSoonVehicles] = await Promise.all([
-          getVehicleCount(),
-          getCustomerCount(),
-          getServiceRecordCount(),
-          getDueSoonVehicles(),
+          getQuery("vehicles:count", getVehicleCount),
+          getQuery("customers:count", getCustomerCount),
+          getQuery("services:count", getServiceRecordCount),
+          getQuery("vehicles:due", getDueSoonVehicles),
         ]);
         setCounts({ vehicles, customers, services, dueSoon: dueSoonVehicles.length });
         setDueSoon(dueSoonVehicles);

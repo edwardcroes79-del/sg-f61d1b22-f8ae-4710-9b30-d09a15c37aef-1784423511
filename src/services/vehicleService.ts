@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getQuery, setQuery, invalidateQueries } from "@/lib/queryCache";
+import { compressImage } from "@/lib/imageCompression";
 
 export interface Vehicle {
   id: string;
@@ -62,20 +64,23 @@ function generateSlug(): string {
 }
 
 export async function getVehicles(search?: string) {
-  let query = supabase
-    .from("vehicles")
-    .select("*, customer:customers(id, full_name, phone_number)")
-    .order("created_at", { ascending: false });
+  const cacheKey = `vehicles:list:${search || ""}`;
+  return getQuery(cacheKey, async () => {
+    let query = supabase
+      .from("vehicles")
+      .select("*, customer:customers(id, full_name, phone_number)")
+      .order("created_at", { ascending: false });
 
-  if (search) {
-    query = query.or(
-      `registration_number.ilike.%${search}%,make.ilike.%${search}%,model.ilike.%${search}%,vin.ilike.%${search}%`
-    );
-  }
+    if (search) {
+      query = query.or(
+        `registration_number.ilike.%${search}%,make.ilike.%${search}%,model.ilike.%${search}%,vin.ilike.%${search}%`
+      );
+    }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data || []) as unknown as VehicleWithCustomer[];
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []) as unknown as VehicleWithCustomer[];
+  });
 }
 
 export async function getVehicleBySlug(slug: string) {
@@ -118,6 +123,7 @@ export async function createVehicle(vehicle: Omit<Vehicle, "id" | "slug" | "qr_s
     .single();
 
   if (error) throw error;
+  invalidateVehiclesCache();
   return data as Vehicle;
 }
 
@@ -130,22 +136,29 @@ export async function updateVehicle(id: string, vehicle: Partial<Vehicle>) {
     .single();
 
   if (error) throw error;
+  invalidateVehiclesCache();
   return data as Vehicle;
 }
 
 export async function deleteVehicle(id: string) {
   const { error } = await supabase.from("vehicles").delete().eq("id", id);
   if (error) throw error;
+  invalidateVehiclesCache();
+}
+
+export function invalidateVehiclesCache(): void {
+  invalidateQueries("vehicles:");
 }
 
 export async function uploadVehicleImage(file: File) {
-  const fileExt = file.name.split(".").pop();
+  const compressed = await compressImage(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
+  const fileExt = compressed.name.split(".").pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `vehicle-images/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from("vehicle-images")
-    .upload(filePath, file);
+    .upload(filePath, compressed);
 
   if (uploadError) throw uploadError;
 
@@ -158,48 +171,54 @@ export async function uploadVehicleImage(file: File) {
 
 export async function getVehicleCount(): Promise<number> {
   const workshopId = await getUserWorkshopId();
-  const { count, error } = await supabase
-    .from("vehicles")
-    .select("*", { count: "exact", head: true })
-    .eq("workshop_id", workshopId);
+  const cacheKey = `vehicles:count:${workshopId}`;
+  return getQuery(cacheKey, async () => {
+    const { count, error } = await supabase
+      .from("vehicles")
+      .select("*", { count: "exact", head: true })
+      .eq("workshop_id", workshopId);
 
-  if (error) throw error;
-  return count || 0;
+    if (error) throw error;
+    return count || 0;
+  });
 }
 
 export async function getDueSoonVehicles(): Promise<VehicleWithCustomer[]> {
   const workshopId = await getUserWorkshopId();
-  const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const cacheKey = `vehicles:due:${workshopId}`;
+  return getQuery(cacheKey, async () => {
+    const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Vehicles with next_service_date within the next 7 days (or overdue)
-  const { data: dateDue, error: dateError } = await supabase
-    .from("vehicles")
-    .select("*, customer:customers(id, full_name, phone_number)")
-    .eq("workshop_id", workshopId)
-    .not("next_service_date", "is", null)
-    .lte("next_service_date", future)
-    .order("next_service_date", { ascending: true });
+    // Vehicles with next_service_date within the next 7 days (or overdue)
+    const { data: dateDue, error: dateError } = await supabase
+      .from("vehicles")
+      .select("*, customer:customers(id, full_name, phone_number)")
+      .eq("workshop_id", workshopId)
+      .not("next_service_date", "is", null)
+      .lte("next_service_date", future)
+      .order("next_service_date", { ascending: true });
 
-  if (dateError) throw dateError;
+    if (dateError) throw dateError;
 
-  // Vehicles with next_service_mileage <= current_mileage (overdue by mileage)
-  const { data: mileageCandidates, error: mileageError } = await supabase
-    .from("vehicles")
-    .select("*, customer:customers(id, full_name, phone_number)")
-    .eq("workshop_id", workshopId)
-    .not("next_service_mileage", "is", null)
-    .not("current_mileage", "is", null)
-    .order("next_service_mileage", { ascending: true });
+    // Vehicles with next_service_mileage <= current_mileage (overdue by mileage)
+    const { data: mileageCandidates, error: mileageError } = await supabase
+      .from("vehicles")
+      .select("*, customer:customers(id, full_name, phone_number)")
+      .eq("workshop_id", workshopId)
+      .not("next_service_mileage", "is", null)
+      .not("current_mileage", "is", null)
+      .order("next_service_mileage", { ascending: true });
 
-  if (mileageError) throw mileageError;
+    if (mileageError) throw mileageError;
 
-  const mileageDue = (mileageCandidates || []).filter(
-    (v) => (v.next_service_mileage ?? Infinity) <= (v.current_mileage ?? 0)
-  );
+    const mileageDue = (mileageCandidates || []).filter(
+      (v) => (v.next_service_mileage ?? Infinity) <= (v.current_mileage ?? 0)
+    );
 
-  const combinedMap = new Map<string, VehicleWithCustomer>();
-  for (const v of dateDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
-  for (const v of mileageDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
+    const combinedMap = new Map<string, VehicleWithCustomer>();
+    for (const v of dateDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
+    for (const v of mileageDue || []) combinedMap.set(v.id, v as unknown as VehicleWithCustomer);
 
-  return Array.from(combinedMap.values()).slice(0, 10);
+    return Array.from(combinedMap.values()).slice(0, 10);
+  });
 }

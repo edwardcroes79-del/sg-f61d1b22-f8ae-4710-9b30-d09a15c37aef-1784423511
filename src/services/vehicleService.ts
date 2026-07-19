@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getQuery, setQuery, invalidateQueries } from "@/lib/queryCache";
+import { getQuery, invalidateQueries } from "@/lib/queryCache";
 import { compressImage } from "@/lib/imageCompression";
 
 export interface Vehicle {

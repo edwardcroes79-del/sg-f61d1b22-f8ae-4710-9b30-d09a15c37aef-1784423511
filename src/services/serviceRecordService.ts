@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
+import { invalidateQueries } from "@/lib/queryCache";
 
 export interface ServiceRecord {
   id: string;
@@ -39,6 +40,7 @@ export async function createServiceRecord(record: Omit<ServiceRecord, "id" | "cr
     .single();
 
   if (error) throw error;
+  invalidateServiceRecordsCache();
   return data as ServiceRecord;
 }
 
@@ -51,12 +53,18 @@ export async function updateServiceRecord(id: string, record: Partial<ServiceRec
     .single();
 
   if (error) throw error;
+  invalidateServiceRecordsCache();
   return data as ServiceRecord;
 }
 
 export async function deleteServiceRecord(id: string) {
   const { error } = await supabase.from("service_records").delete().eq("id", id);
   if (error) throw error;
+  invalidateServiceRecordsCache();
+}
+
+export function invalidateServiceRecordsCache(): void {
+  invalidateQueries("services:");
 }
 
 export async function uploadServiceImage(file: File) {

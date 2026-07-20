@@ -12,15 +12,16 @@ position: 10
 Users scanning the QR code should be able to subscribe to service reminders with their email and choose when to be notified (1 day before, 1 week before, or both). The admin can send reminders manually and view a delivery log on the settings page. Emails are sent via SMTP using environment variables.
 
 ## Checklist
-- [ ] Add `reminder_preferences` table with email, lead_time options (1d, 7d), subscribed_at.
-- [ ] Add `reminder_deliveries` log table with status, sent_at, error_message.
-- [ ] Update vehicle public page UI to let users enter email and pick reminder lead times.
-- [ ] Create `/api/reminders/preferences` endpoint to save preferences.
-- [ ] Create `/api/reminders/send` endpoint for manual + cron sending via SMTP.
-- [ ] Create `/api/reminders/log` endpoint to fetch delivery log.
-- [ ] Add cron endpoint `/api/reminders/cron` that runs daily and sends due reminders.
-- [ ] Add settings page "Reminders" section with delivery log, manual send button, and SMTP status.
+- [x] Add `reminder_preferences` table with email, lead_time options (1d, 7d), subscribed_at.
+- [x] Add `reminder_deliveries` log table with status, sent_at, error_message.
+- [x] Update vehicle public page UI to let users enter email and pick reminder lead times.
+- [x] Create `/api/reminders/preferences` endpoint to save preferences.
+- [x] Create `/api/reminders/send` endpoint for manual + cron sending via SMTP.
+- [x] Create `/api/reminders/log` endpoint to fetch delivery log.
+- [x] Add cron endpoint `/api/reminders/cron` that runs daily and sends due reminders.
+- [x] Add settings page "Reminders" section with delivery log, manual send button, and SMTP status.
 - [ ] Document required SMTP environment variables.
+- [ ] Run check_for_errors.
 
 ## Acceptance
 - A customer can enter their email on the vehicle page and choose 1-day / 7-day reminders.

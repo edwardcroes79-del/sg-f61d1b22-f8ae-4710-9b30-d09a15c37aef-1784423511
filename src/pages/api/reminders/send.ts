@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         `;
 
-        let result: DeliveryResult = {
+        const result: DeliveryResult = {
           preference_id: pref.id,
           vehicle_id: vehicle.id,
           email: pref.email,
@@ -147,7 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    return res.status(200).json({ sent: results.filter((r) => r.status === "sent").length, results });
+    return res.status(200).json({ sent: results.filter((r) => r.status === "sent").length, failed: results.filter((r) => r.status === "failed").length, results });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || "Internal server error" });
   }

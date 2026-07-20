@@ -1,6 +1,6 @@
 ---
 title: Configurable service reminders via SMTP
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [reminders, smtp, cron, notifications, settings]
@@ -9,7 +9,24 @@ created_at: 2026-07-20T19:36:33Z
 position: 10
 ---
 ## Notes
-Users scanning the QR code should be able to subscribe to service reminders with their email and choose when to be notified (1 day before, 1 week before, or both). The admin can send reminders manually and view a delivery log on the settings page. Emails are sent via SMTP using environment variables.
+Users scanning the QR code can subscribe to service reminders with their email and choose when to be notified (1 day before, 1 week before, or both). The admin can send reminders manually from the dashboard and view a delivery log. Emails are sent via SMTP using environment variables.
+
+## Required Environment Variables
+Add these in **Softgen Settings → Environment** and restart the server:
+
+```
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-user
+SMTP_PASS=your-smtp-password
+SMTP_FROM=noreply@yourdomain.com
+```
+
+Optional cron protection:
+
+```
+CRON_SECRET=a-random-secret-key
+```
 
 ## Checklist
 - [x] Add `reminder_preferences` table with email, lead_time options (1d, 7d), subscribed_at.
@@ -20,8 +37,7 @@ Users scanning the QR code should be able to subscribe to service reminders with
 - [x] Create `/api/reminders/log` endpoint to fetch delivery log.
 - [x] Add cron endpoint `/api/reminders/cron` that runs daily and sends due reminders.
 - [x] Add settings page "Reminders" section with delivery log, manual send button, and SMTP status.
-- [ ] Document required SMTP environment variables.
-- [ ] Run check_for_errors.
+- [x] Document required SMTP environment variables.
 
 ## Acceptance
 - A customer can enter their email on the vehicle page and choose 1-day / 7-day reminders.

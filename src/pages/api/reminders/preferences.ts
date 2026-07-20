@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reminder_preferences`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reminder_preferences?on_conflict=vehicle_id,email`,
       {
         method: "POST",
         headers: {

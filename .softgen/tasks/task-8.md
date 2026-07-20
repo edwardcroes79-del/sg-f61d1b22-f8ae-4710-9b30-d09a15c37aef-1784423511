@@ -1,6 +1,6 @@
 ---
 title: PWA install prompt on public vehicle page
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [pwa, install, qr, mobile]

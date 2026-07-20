@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/workshopService";
 import { useWorkshop } from "@/contexts/WorkshopContext";
 import { updateEmail, updatePassword } from "@/services/authService";
-import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog } from "lucide-react";
+import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog, Bell, Send, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 const emptyForm: Partial<Workshop> = {
   name: "",
@@ -38,6 +38,10 @@ export default function SettingsPage() {
   const [account, setAccount] = useState({ email: "", newPassword: "", confirmPassword: "" });
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [loadingDeliveries, setLoadingDeliveries] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,6 +52,42 @@ export default function SettingsPage() {
       refresh().then(() => setLoading(false));
     }
   }, [workshop, refresh]);
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, []);
+
+  async function fetchDeliveries() {
+    setLoadingDeliveries(true);
+    try {
+      const res = await fetch("/api/reminders/log");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Could not load delivery log");
+      setDeliveries(json.deliveries || []);
+    } catch (err: any) {
+      toast({ title: "Could not load delivery log", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingDeliveries(false);
+    }
+  }
+
+  async function handleSendReminders() {
+    setSendingReminders(true);
+    try {
+      const res = await fetch("/api/reminders/send", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Send failed");
+      toast({
+        title: "Reminders sent",
+        description: `${json.sent || 0} sent, ${json.failed || 0} failed.`,
+      });
+      await fetchDeliveries();
+    } catch (err: any) {
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingReminders(false);
+    }
+  }
 
   function handleChange(field: keyof Workshop, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -263,6 +303,114 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h2 className="text-xl font-heading font-semibold mb-4 flex items-center gap-2">
+            <Bell className="w-5 h-5 text-primary" />
+            Service Reminders
+          </h2>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card className="card-premium md:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Send className="w-4 h-4 text-primary" />
+                  Delivery Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Customers subscribe on their vehicle page. Use the button to send all due reminders now, or schedule a daily cron job to call <code>/api/reminders/cron</code>.
+                </p>
+
+                <div className="rounded-xl border overflow-hidden">
+                  <div className="max-h-80 overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="text-left font-medium px-4 py-3">Sent</th>
+                          <th className="text-left font-medium px-4 py-3">Email</th>
+                          <th className="text-left font-medium px-4 py-3">Lead Time</th>
+                          <th className="text-left font-medium px-4 py-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {loadingDeliveries ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                              Loading...
+                            </td>
+                          </tr>
+                        ) : deliveries.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                              No reminders sent yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          deliveries.map((d) => (
+                            <tr key={d.id}>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                {new Date(d.sent_at).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3">{d.email}</td>
+                              <td className="px-4 py-3">{d.lead_time}</td>
+                              <td className="px-4 py-3">
+                                {d.status === "sent" ? (
+                                  <span className="inline-flex items-center gap-1 text-success">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    Sent
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-destructive">
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    Failed
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="card-premium">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Mail className="w-4 h-4 text-primary" />
+                  SMTP Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Host</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{process.env.SMTP_HOST || "Not set"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">From Address</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{process.env.SMTP_FROM || "Not set"}</p>
+                </div>
+                {(!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.SMTP_FROM) && (
+                  <div className="rounded-lg bg-destructive/10 p-3 flex gap-2 text-sm text-destructive">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    Add SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in Settings → Environment.
+                  </div>
+                )}
+                <Button type="button" onClick={handleSendReminders} disabled={sendingReminders} className="w-full">
+                  {sendingReminders && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {sendingReminders ? "Sending..." : "Send Due Reminders Now"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <Separator />

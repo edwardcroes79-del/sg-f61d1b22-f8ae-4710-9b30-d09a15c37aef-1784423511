@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getVehicleBySlug } from "@/services/vehicleService";
 import { getServiceRecords } from "@/services/serviceRecordService";
 import type { ServiceRecord } from "@/services/serviceRecordService";
@@ -28,9 +31,8 @@ import {
   Download,
   Share2,
   Bell,
-  BellOff,
   Loader2,
-  X,
+  BellOff,
 } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -111,6 +113,12 @@ export default function PublicVehiclePage() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+
+  const [reminderEmail, setReminderEmail] = useState("");
+  const [reminderOneDay, setReminderOneDay] = useState(true);
+  const [reminderOneWeek, setReminderOneWeek] = useState(false);
+  const [reminderLoading, setReminderLoading] = useState(false);
+  const [reminderSaved, setReminderSaved] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
 
@@ -128,15 +136,38 @@ export default function PublicVehiclePage() {
       setShowIosHint(true);
     }
 
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      navigator.serviceWorker.ready.then(async (registration) => {
-        const existing = await registration.pushManager.getSubscription();
-        setSubscribed(!!existing);
-      });
-    }
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
+
+  async function handleReminderSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!vehicle) return;
+    if (!reminderEmail.trim() || (!reminderOneDay && !reminderOneWeek)) return;
+
+    setReminderLoading(true);
+    try {
+      const res = await fetch("/api/reminders/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle_id: vehicle.id,
+          email: reminderEmail.trim(),
+          one_day: reminderOneDay,
+          one_week: reminderOneWeek,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Could not save preferences");
+
+      setReminderSaved(true);
+      setTimeout(() => setReminderSaved(false), 3000);
+    } catch (err: any) {
+      alert(err.message || "Could not save reminder preferences.");
+    } finally {
+      setReminderLoading(false);
+    }
+  }
 
   async function handleInstall() {
     if (installEvent) {
@@ -510,39 +541,52 @@ export default function PublicVehiclePage() {
               <Card className="card-premium">
                 <CardHeader className="p-4 sm:p-6 pb-2">
                   <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                    {subscribed ? <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-success" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     Service Reminders
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
-                  {"PushManager" in (typeof window !== "undefined" ? window : {}) ? (
-                    <>
-                      <p className="text-sm text-muted-foreground">
-                        {subscribed
-                          ? "You'll receive a reminder the day before your next service is due."
-                          : "Get notified one day before your vehicle is due for service."}
-                      </p>
-                      <Button
-                        onClick={handleSubscribe}
-                        disabled={subscribing}
-                        variant={subscribed ? "outline" : "default"}
-                        className="w-full h-12 text-base"
-                      >
-                        {subscribing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        {subscribed ? "Turn Off Reminders" : "Remind Me"}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm text-muted-foreground">
-                        Push reminders aren't supported in this browser. Open this page in Chrome, Edge, or Safari on iOS 16.4+ and add it to your home screen.
-                      </p>
-                      <Button disabled variant="outline" className="w-full h-12 text-base">
-                        <BellOff className="w-4 h-4 mr-2" />
-                        Not Available
-                      </Button>
-                    </>
-                  )}
+                <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
+                  <p className="text-sm text-muted-foreground">
+                    Get an email before your next service is due. Pick one or both.
+                  </p>
+                  <form onSubmit={handleReminderSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reminder-email" className="text-sm">Email address</Label>
+                      <Input
+                        id="reminder-email"
+                        type="email"
+                        required
+                        value={reminderEmail}
+                        onChange={(e) => setReminderEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="h-12"
+                      />
+                    </div>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={reminderOneDay}
+                          onCheckedChange={(v) => setReminderOneDay(v === true)}
+                        />
+                        1 day before
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={reminderOneWeek}
+                          onCheckedChange={(v) => setReminderOneWeek(v === true)}
+                        />
+                        1 week before
+                      </label>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={reminderLoading || (!reminderOneDay && !reminderOneWeek)}
+                      className="w-full h-12 text-base"
+                    >
+                      {reminderLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {reminderSaved ? "Saved!" : "Remind Me"}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             </div>

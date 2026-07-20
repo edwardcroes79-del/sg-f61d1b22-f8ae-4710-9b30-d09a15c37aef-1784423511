@@ -39,11 +39,13 @@ async function getUserWorkshopId(): Promise<string> {
 }
 
 export async function getCustomers(search?: string) {
-  const cacheKey = `customers:list:${search || ""}`;
+  const workshopId = await getUserWorkshopId();
+  const cacheKey = `customers:list:${workshopId}:${search || ""}`;
   return getQuery(cacheKey, async () => {
     let query = supabase
       .from("customers")
       .select("*")
+      .eq("workshop_id", workshopId)
       .order("created_at", { ascending: false });
 
     if (search) {
@@ -79,7 +81,7 @@ export async function createCustomer(customer: Omit<Customer, "id" | "created_at
     .single();
 
   if (error) throw error;
-  invalidateCustomersCache();
+  invalidateQueries("customers:");
   return data as Customer;
 }
 
@@ -92,7 +94,7 @@ export async function updateCustomer(id: string, customer: Partial<Omit<Customer
     .single();
 
   if (error) throw error;
-  invalidateCustomersCache();
+  invalidateQueries("customers:");
   return data as Customer;
 }
 
@@ -103,7 +105,7 @@ export async function deleteCustomer(id: string) {
     .eq("id", id);
 
   if (error) throw error;
-  invalidateCustomersCache();
+  invalidateQueries("customers:");
 }
 
 export function invalidateCustomersCache(): void {

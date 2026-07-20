@@ -64,11 +64,13 @@ function generateSlug(): string {
 }
 
 export async function getVehicles(search?: string) {
-  const cacheKey = `vehicles:list:${search || ""}`;
+  const workshopId = await getUserWorkshopId();
+  const cacheKey = `vehicles:list:${workshopId}:${search || ""}`;
   return getQuery(cacheKey, async () => {
     let query = supabase
       .from("vehicles")
       .select("*, customer:customers(id, full_name, phone_number)")
+      .eq("workshop_id", workshopId)
       .order("created_at", { ascending: false });
 
     if (search) {
@@ -123,7 +125,7 @@ export async function createVehicle(vehicle: Omit<Vehicle, "id" | "slug" | "qr_s
     .single();
 
   if (error) throw error;
-  invalidateVehiclesCache();
+  invalidateQueries("vehicles:");
   return data as Vehicle;
 }
 
@@ -136,14 +138,14 @@ export async function updateVehicle(id: string, vehicle: Partial<Vehicle>) {
     .single();
 
   if (error) throw error;
-  invalidateVehiclesCache();
+  invalidateQueries("vehicles:");
   return data as Vehicle;
 }
 
 export async function deleteVehicle(id: string) {
   const { error } = await supabase.from("vehicles").delete().eq("id", id);
   if (error) throw error;
-  invalidateVehiclesCache();
+  invalidateQueries("vehicles:");
 }
 
 export function invalidateVehiclesCache(): void {

@@ -1,6 +1,6 @@
 ---
 title: PWA install prompt on public vehicle page
-status: done
+status: in_progress
 priority: high
 type: feature
 tags: [pwa, install, qr, mobile]
@@ -15,10 +15,12 @@ After scanning the QR code, users should be able to save the vehicle service pag
 - [x] Add explicit PWA install button to public vehicle page.
 - [x] Detect beforeinstallprompt event on Android/Chrome.
 - [x] Show Safari iOS install instructions when prompt unavailable.
-- [x] Verify installed app opens directly to the scanned vehicle page.
+- [x] Show generic install instructions when prompt is unavailable.
+- [x] Always show Service Reminders card with support-aware messaging.
+- [x] Verify installed app opens directly to that vehicle page.
 - [x] Run check_for_errors.
 
 ## Acceptance
-- A user scanning a QR code sees a clear "Install App" button.
+- A user scanning a QR code sees a clear "Install App" or instructions.
 - Tapping it adds the vehicle page to their home screen.
 - Opening the icon returns directly to that vehicle's service record.

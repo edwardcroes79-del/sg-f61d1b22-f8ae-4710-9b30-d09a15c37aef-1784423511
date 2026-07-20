@@ -493,41 +493,58 @@ export default function PublicVehiclePage() {
                         </ol>
                       </div>
                     ) : (
-                      <Button onClick={handleInstall} variant="outline" className="w-full h-12 text-base">
-                        <Download className="w-4 h-4 mr-2" />
-                        Add to Home Screen
-                      </Button>
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Your browser will show an install prompt here when available. You can also add this page via your browser's menu.
+                        </p>
+                        <Button onClick={handleInstall} variant="outline" className="w-full h-12 text-base">
+                          <Download className="w-4 h-4 mr-2" />
+                          Add to Home Screen
+                        </Button>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
               )}
 
-              {"PushManager" in (typeof window !== "undefined" ? window : {}) && (
-                <Card className="card-premium">
-                  <CardHeader className="p-4 sm:p-6 pb-2">
-                    <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                      {subscribed ? <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-success" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
-                      Service Reminders
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      {subscribed
-                        ? "You'll receive a reminder the day before your next service is due."
-                        : "Get notified one day before your vehicle is due for service."}
-                    </p>
-                    <Button
-                      onClick={handleSubscribe}
-                      disabled={subscribing}
-                      variant={subscribed ? "outline" : "default"}
-                      className="w-full h-12 text-base"
-                    >
-                      {subscribing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      {subscribed ? "Turn Off Reminders" : "Remind Me"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <Card className="card-premium">
+                <CardHeader className="p-4 sm:p-6 pb-2">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    {subscribed ? <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-success" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
+                    Service Reminders
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
+                  {"PushManager" in (typeof window !== "undefined" ? window : {}) ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        {subscribed
+                          ? "You'll receive a reminder the day before your next service is due."
+                          : "Get notified one day before your vehicle is due for service."}
+                      </p>
+                      <Button
+                        onClick={handleSubscribe}
+                        disabled={subscribing}
+                        variant={subscribed ? "outline" : "default"}
+                        className="w-full h-12 text-base"
+                      >
+                        {subscribing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {subscribed ? "Turn Off Reminders" : "Remind Me"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Push reminders aren't supported in this browser. Open this page in Chrome, Edge, or Safari on iOS 16.4+ and add it to your home screen.
+                      </p>
+                      <Button disabled variant="outline" className="w-full h-12 text-base">
+                        <BellOff className="w-4 h-4 mr-2" />
+                        Not Available
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>

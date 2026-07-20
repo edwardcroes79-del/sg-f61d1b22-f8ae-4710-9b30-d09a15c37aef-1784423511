@@ -121,6 +121,92 @@ export type Database = {
           },
         ]
       }
+      reminder_deliveries: {
+        Row: {
+          email: string
+          error_message: string | null
+          id: string
+          lead_time: string
+          preference_id: string | null
+          sent_at: string | null
+          status: string
+          vehicle_id: string
+        }
+        Insert: {
+          email: string
+          error_message?: string | null
+          id?: string
+          lead_time: string
+          preference_id?: string | null
+          sent_at?: string | null
+          status: string
+          vehicle_id: string
+        }
+        Update: {
+          email?: string
+          error_message?: string | null
+          id?: string
+          lead_time?: string
+          preference_id?: string | null
+          sent_at?: string | null
+          status?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_deliveries_preference_id_fkey"
+            columns: ["preference_id"]
+            isOneToOne: false
+            referencedRelation: "reminder_preferences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_deliveries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_preferences: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          one_day: boolean
+          one_week: boolean
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          one_day?: boolean
+          one_week?: boolean
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          one_day?: boolean
+          one_week?: boolean
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_preferences_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_images: {
         Row: {
           caption: string | null

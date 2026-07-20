@@ -32,7 +32,6 @@ import {
   Share2,
   Bell,
   Loader2,
-  BellOff,
 } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -119,8 +118,6 @@ export default function PublicVehiclePage() {
   const [reminderOneWeek, setReminderOneWeek] = useState(false);
   const [reminderLoading, setReminderLoading] = useState(false);
   const [reminderSaved, setReminderSaved] = useState(false);
-  const [subscribed, setSubscribed] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -248,59 +245,6 @@ export default function PublicVehiclePage() {
   const daysTotal = 365;
   const daysRemaining = status.daysRemaining ?? 0;
   const progress = Math.max(0, Math.min(100, ((daysTotal - daysRemaining) / daysTotal) * 100));
-
-  async function handleSubscribe() {
-    if (!vehicle) return;
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      return;
-    }
-
-    setSubscribing(true);
-
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        throw new Error("Push notifications are not configured.");
-      }
-
-      const existing = await registration.pushManager.getSubscription();
-      if (existing) {
-        await existing.unsubscribe();
-        setSubscribed(false);
-        setSubscribing(false);
-        return;
-      }
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-      });
-
-      const subJson = subscription.toJSON();
-      const res = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vehicle_slug: vehicle.slug,
-          endpoint: subJson.endpoint,
-          p256dh: subJson.keys?.p256dh,
-          auth: subJson.keys?.auth,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save subscription.");
-      }
-
-      setSubscribed(true);
-    } catch (err: any) {
-      console.error("Push subscription failed:", err);
-      alert(err.message || "Could not enable reminders.");
-    } finally {
-      setSubscribing(false);
-    }
-  }
 
   const primaryStyle = defaultWorkshop.primary_color
     ? ({ ["--primary" as string]: hexToHsl(defaultWorkshop.primary_color), ["--accent" as string]: hexToHsl(defaultWorkshop.primary_color), ["--ring" as string]: hexToHsl(defaultWorkshop.primary_color) } as React.CSSProperties)
@@ -615,15 +559,4 @@ function Spec({ label, value, icon: Icon }: { label: string; value: string; icon
       </div>
     </div>
   );
-}
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
 }

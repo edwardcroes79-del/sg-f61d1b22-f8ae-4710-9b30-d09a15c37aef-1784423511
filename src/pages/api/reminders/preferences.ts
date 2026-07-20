@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { supabaseAdmin } from "@/integrations/supabase/admin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -22,32 +23,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Select at least one reminder option" });
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reminder_preferences?on_conflict=vehicle_id,email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`,
-          Prefer: "resolution=merge-duplicates,return=representation",
-        },
-        body: JSON.stringify({
+    const { data, error } = await supabaseAdmin
+      .from("reminder_preferences")
+      .upsert(
+        {
           vehicle_id,
           email,
           one_day,
           one_week,
-        }),
-      }
-    );
+        },
+        { onConflict: "vehicle_id,email" }
+      )
+      .select()
+      .single();
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(response.status).json({ error: text || "Failed to save preference" });
+    if (error) {
+      return res.status(500).json({ error: error.message });
     }
 
-    const data = await response.json();
-    return res.status(200).json({ data: data[0] });
+    return res.status(200).json({ data });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || "Internal server error" });
   }

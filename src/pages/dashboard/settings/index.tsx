@@ -488,6 +488,17 @@ export async function getServerSideProps() {
   const host = process.env.SMTP_HOST || "";
   const from = process.env.SMTP_FROM || "";
 
+  const status = {
+    host,
+    from,
+    hasHost: !!process.env.SMTP_HOST,
+    hasUser: !!process.env.SMTP_USER,
+    hasPass: !!process.env.SMTP_PASS,
+    hasFrom: !!process.env.SMTP_FROM,
+  };
+
+  console.log("[settings/getServerSideProps] SMTP env check:", status);
+
   return {
     props: {
       smtpStatus: {

@@ -1,153 +1,138 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/integrations/supabase/admin";
 
-type DeliveryResult = {
-  preference_id: string | null;
+interface ReminderPreference {
+  id: string;
   vehicle_id: string;
   email: string;
-  lead_time: "1d" | "7d";
-  status: "sent" | "failed";
-  error_message?: string;
-};
+  one_day: boolean;
+  one_week: boolean;
+  subscribed_at: string;
+}
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+interface VehicleWithService {
+  id: string;
+  registration_number: string;
+  make: string;
+  model: string;
+  next_service_date: string | null;
+  next_service_mileage: number | null;
+  current_mileage: number | null;
+  owner_name: string | null;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpFrom = process.env.SMTP_FROM;
-
-  if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom) {
-    return res.status(503).json({ error: "SMTP is not configured" });
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: Number(smtpPort),
-    secure: Number(smtpPort) === 465,
-    auth: { user: smtpUser, pass: smtpPass },
-  });
-
   try {
-    const today = new Date();
-    const oneDay = new Date(today);
-    oneDay.setDate(oneDay.getDate() + 1);
-    const sevenDays = new Date(today);
-    sevenDays.setDate(sevenDays.getDate() + 7);
+    if (
+      req.headers.authorization &&
+      process.env.CRON_SECRET &&
+      req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`
+    ) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    const oneDayStr = oneDay.toISOString().slice(0, 10);
-    const sevenDaysStr = sevenDays.toISOString().slice(0, 10);
+    const host = process.env.SMTP_HOST;
+    const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    const from = process.env.SMTP_FROM;
 
-    const { data: preferences, error: prefError } = await supabaseAdmin
+    if (!host || !user || !pass || !from) {
+      return res.status(500).json({ error: "SMTP is not configured" });
+    }
+
+    const admin = getSupabaseAdmin();
+
+    const { data: preferences, error: prefError } = await admin
       .from("reminder_preferences")
-      .select("*, vehicle:vehicles(*, customer:customers(full_name), workshop:workshops(name, contact_email, website))");
+      .select("*")
+      .returns<ReminderPreference[]>();
 
     if (prefError) throw prefError;
 
-    const results: DeliveryResult[] = [];
+    const { data: vehicles, error: vehicleError } = await admin
+      .from("vehicles")
+      .select("id, registration_number, make, model, next_service_date, next_service_mileage, current_mileage, owner_name")
+      .returns<VehicleWithService[]>();
 
-    for (const pref of (preferences || [])) {
-      const vehicle = pref.vehicle;
+    if (vehicleError) throw vehicleError;
+
+    const vehicleMap = new Map(vehicles?.map((v) => [v.id, v]) || []);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due: Array<{ preference: ReminderPreference; vehicle: VehicleWithService; leadTime: number; label: string }> = [];
+
+    for (const pref of preferences || []) {
+      const vehicle = vehicleMap.get(pref.vehicle_id);
       if (!vehicle || !vehicle.next_service_date) continue;
 
-      const leadTimes: ("1d" | "7d")[] = [];
-      if (pref.one_day && vehicle.next_service_date === oneDayStr) leadTimes.push("1d");
-      if (pref.one_week && vehicle.next_service_date === sevenDaysStr) leadTimes.push("7d");
+      const nextDate = new Date(vehicle.next_service_date);
+      nextDate.setHours(0, 0, 0, 0);
+      const diffMs = nextDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      if (leadTimes.length === 0) continue;
-
-      for (const leadTime of leadTimes) {
-        const { data: existing } = await supabaseAdmin
-          .from("reminder_deliveries")
-          .select("id")
-          .eq("preference_id", pref.id)
-          .eq("lead_time", leadTime)
-          .eq("vehicle_id", vehicle.id)
-          .gte("sent_at", new Date(Date.now() - 86400000).toISOString())
-          .maybeSingle();
-
-        if (existing) continue;
-
-        const customerName = vehicle.customer?.full_name || "there";
-        const workshopName = vehicle.workshop?.name || "your workshop";
-        const vehicleLabel = `${vehicle.make} ${vehicle.model} (${vehicle.registration_number})`;
-        const nextServiceDate = new Date(vehicle.next_service_date).toLocaleDateString(undefined, {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        const subject =
-          leadTime === "1d"
-            ? `Service due tomorrow — ${vehicleLabel}`
-            : `Service due in one week — ${vehicleLabel}`;
-
-        const html = `
-          <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2 style="color: #D97706;">${workshopName}</h2>
-            <p>Hi ${customerName},</p>
-            <p>This is a friendly reminder that your vehicle service is coming up:</p>
-            <ul>
-              <li><strong>Vehicle:</strong> ${vehicleLabel}</li>
-              <li><strong>Next service date:</strong> ${nextServiceDate}</li>
-              ${vehicle.next_service_mileage ? `<li><strong>Next service mileage:</strong> ${vehicle.next_service_mileage.toLocaleString()} km</li>` : ""}
-            </ul>
-            <p>Contact us to book your appointment:</p>
-            ${vehicle.workshop?.contact_email ? `<p>Email: <a href="mailto:${vehicle.workshop.contact_email}">${vehicle.workshop.contact_email}</a></p>` : ""}
-            ${vehicle.workshop?.website ? `<p>Website: <a href="${vehicle.workshop.website}">${vehicle.workshop.website}</a></p>` : ""}
-            <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 24px 0;" />
-            <p style="font-size: 12px; color: #64748B;">
-              You received this because you subscribed to service reminders. Reply STOP to unsubscribe.
-            </p>
-          </div>
-        `;
-
-        const result: DeliveryResult = {
-          preference_id: pref.id,
-          vehicle_id: vehicle.id,
-          email: pref.email,
-          lead_time: leadTime,
-          status: "sent",
-        };
-
-        try {
-          await transporter.sendMail({
-            from: smtpFrom,
-            to: pref.email,
-            subject,
-            html,
-          });
-        } catch (err: any) {
-          result.status = "failed";
-          result.error_message = err.message || "SMTP error";
-        }
-
-        await supabaseAdmin.from("reminder_deliveries").insert({
-          preference_id: pref.id,
-          vehicle_id: vehicle.id,
-          email: pref.email,
-          lead_time: leadTime,
-          status: result.status,
-          error_message: result.error_message || null,
-        });
-
-        results.push(result);
+      if (pref.one_week && diffDays === 7) {
+        due.push({ preference: pref, vehicle, leadTime: 7, label: "1 week" });
+      } else if (pref.one_day && diffDays === 1) {
+        due.push({ preference: pref, vehicle, leadTime: 1, label: "1 day" });
       }
     }
 
-    return res.status(200).json({ sent: results.filter((r) => r.status === "sent").length, failed: results.filter((r) => r.status === "failed").length, results });
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+
+    const results: Array<{ id: string; status: "sent" | "failed"; error?: string }> = [];
+
+    for (const item of due) {
+      const subject = `Service reminder for ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number})`;
+      const text = `Hi ${item.vehicle.owner_name || "there"},\n\nThis is a friendly reminder that your ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number}) is due for service in ${item.label}.\n\nNext service date: ${item.vehicle.next_service_date}\n${item.vehicle.next_service_mileage ? `Next service mileage: ${item.vehicle.next_service_mileage.toLocaleString()} km` : ""}\n\nPlease contact us to book your service.\n\nRegards,\n${process.env.NEXT_PUBLIC_APP_NAME || "Torque Log"}`;
+
+      try {
+        await transporter.sendMail({
+          from,
+          to: item.preference.email,
+          subject,
+          text,
+        });
+
+        const { error: logError } = await admin.from("reminder_deliveries").insert({
+          preference_id: item.preference.id,
+          vehicle_id: item.vehicle.id,
+          email: item.preference.email,
+          lead_time: item.label,
+          status: "sent",
+          sent_at: new Date().toISOString(),
+        });
+
+        if (logError) throw logError;
+
+        results.push({ id: item.preference.id, status: "sent" });
+      } catch (err: any) {
+        await admin.from("reminder_deliveries").insert({
+          preference_id: item.preference.id,
+          vehicle_id: item.vehicle.id,
+          email: item.preference.email,
+          lead_time: item.label,
+          status: "failed",
+          error_message: err.message || "Unknown error",
+          sent_at: new Date().toISOString(),
+        });
+
+        results.push({ id: item.preference.id, status: "failed", error: err.message });
+      }
+    }
+
+    return res.status(200).json({
+      sent: results.filter((r) => r.status === "sent").length,
+      failed: results.filter((r) => r.status === "failed").length,
+      results,
+    });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || "Internal server error" });
   }

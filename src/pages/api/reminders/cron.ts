@@ -1,25 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const secret = req.headers["x-cron-secret"];
-  if (!secret || secret !== process.env.CRON_SECRET) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
   try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `http://localhost:${process.env.PORT || 3000}`;
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret) {
+      const auth = req.headers.authorization || "";
+      if (auth !== `Bearer ${cronSecret}`) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+    }
 
-    const response = await fetch(`${baseUrl}/api/reminders/send`, { method: "POST" });
-    const data = await response.json();
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${req.headers.host}`;
+    const response = await fetch(`${baseUrl}/api/reminders/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
 
-    return res.status(response.status).json(data);
+    const json = await response.json();
+    if (!response.ok) throw new Error(json.error || "Cron send failed");
+
+    return res.status(200).json({ ok: true, ...json });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || "Cron failed" });
   }

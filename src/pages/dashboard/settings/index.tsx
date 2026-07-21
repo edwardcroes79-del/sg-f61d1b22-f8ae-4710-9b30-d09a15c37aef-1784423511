@@ -108,7 +108,7 @@ export default function SettingsPage() {
     }
   }
 
-  function handleChange(field: keyof Workshop, value: string) {
+  function handleChange(field: keyof Workshop, value: string | number) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 

@@ -1,0 +1,1 @@
+ALTER TABLE workshops ADD COLUMN IF NOT EXISTS reminder_email_template text;

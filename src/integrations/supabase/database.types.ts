@@ -404,6 +404,7 @@ export type Database = {
           name: string
           powered_by: string | null
           primary_color: string | null
+          reminder_email_template: string | null
           secondary_color: string | null
           smtp_from: string | null
           smtp_host: string | null
@@ -429,6 +430,7 @@ export type Database = {
           name: string
           powered_by?: string | null
           primary_color?: string | null
+          reminder_email_template?: string | null
           secondary_color?: string | null
           smtp_from?: string | null
           smtp_host?: string | null
@@ -454,6 +456,7 @@ export type Database = {
           name?: string
           powered_by?: string | null
           primary_color?: string | null
+          reminder_email_template?: string | null
           secondary_color?: string | null
           smtp_from?: string | null
           smtp_host?: string | null

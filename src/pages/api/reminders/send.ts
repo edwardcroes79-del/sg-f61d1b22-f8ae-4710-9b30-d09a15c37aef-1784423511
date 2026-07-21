@@ -29,6 +29,16 @@ interface WorkshopSmtp {
   smtp_from: string | null;
 }
 
+interface WorkshopWithTemplate {
+  smtp_host: string | null;
+  smtp_port: number | null;
+  smtp_user: string | null;
+  smtp_pass: string | null;
+  smtp_from: string | null;
+  name: string | null;
+  reminder_email_template: string | null;
+}
+
 async function getSmtpConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ host: string; port: number; user: string; pass: string; from: string } | null> {
   const envConfig = {
     host: process.env.SMTP_HOST,
@@ -58,6 +68,43 @@ async function getSmtpConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promis
   return { host, port, user, pass, from };
 }
 
+async function getWorkshopConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ smtp: { host: string; port: number; user: string; pass: string; from: string } | null; name: string; template: string }> {
+  const envConfig = {
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.SMTP_FROM,
+  };
+
+  const { data: workshop, error } = await admin
+    .from("workshops")
+    .select("name, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, reminder_email_template")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const db = workshop as WorkshopWithTemplate | null;
+  const host = db?.smtp_host || envConfig.host;
+  const port = db?.smtp_port || envConfig.port;
+  const user = db?.smtp_user || envConfig.user;
+  const pass = db?.smtp_pass || envConfig.pass;
+  const from = db?.smtp_from || envConfig.from;
+
+  const smtp = host && user && pass && from ? { host, port, user, pass, from } : null;
+
+  const name = db?.name || process.env.NEXT_PUBLIC_APP_NAME || "Torque Log";
+
+  const defaultTemplate = "Hi there,\n\nThis is a friendly reminder that your {{make}} {{model}} ({{registration_number}}) is due for service in {{lead_time}}.\n\nNext service date: {{next_service_date}}\n{{next_service_mileage}}\n\nPlease contact us to book your service.\n\nRegards,\n{{workshop_name}}";
+
+  return {
+    smtp,
+    name,
+    template: db?.reminder_email_template || defaultTemplate,
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (
@@ -70,8 +117,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const admin = getSupabaseAdmin();
 
-    const smtp = await getSmtpConfig(admin);
-    if (!smtp) {
+    const config = await getWorkshopConfig(admin);
+    if (!config.smtp) {
       return res.status(500).json({ error: "SMTP is not configured" });
     }
 
@@ -120,21 +167,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.port === 465,
-      auth: { user: smtp.user, pass: smtp.pass },
+      host: config.smtp.host,
+      port: config.smtp.port,
+      secure: config.smtp.port === 465,
+      auth: { user: config.smtp.user, pass: config.smtp.pass },
     });
 
     const results: Array<{ id: string; status: "sent" | "failed"; error?: string }> = [];
 
     for (const item of due) {
       const subject = `Service reminder for ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number})`;
-      const text = `Hi there,\n\nThis is a friendly reminder that your ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number}) is due for service in ${item.label}.\n\nNext service date: ${item.vehicle.next_service_date}\n${item.vehicle.next_service_mileage ? `Next service mileage: ${item.vehicle.next_service_mileage.toLocaleString()} km` : ""}\n\nPlease contact us to book your service.\n\nRegards,\n${process.env.NEXT_PUBLIC_APP_NAME || "Torque Log"}`;
+
+      const mileageText = item.vehicle.next_service_mileage
+        ? `Next service mileage: ${item.vehicle.next_service_mileage.toLocaleString()} km`
+        : "";
+
+      const text = config.template
+        .replace(/{{make}}/g, item.vehicle.make)
+        .replace(/{{model}}/g, item.vehicle.model)
+        .replace(/{{registration_number}}/g, item.vehicle.registration_number)
+        .replace(/{{next_service_date}}/g, item.vehicle.next_service_date || "")
+        .replace(/{{next_service_mileage}}/g, mileageText)
+        .replace(/{{lead_time}}/g, item.label)
+        .replace(/{{workshop_name}}/g, config.name);
 
       try {
         await transporter.sendMail({
-          from: smtp.from,
+          from: config.smtp.from,
           to: item.preference.email,
           subject,
           text,

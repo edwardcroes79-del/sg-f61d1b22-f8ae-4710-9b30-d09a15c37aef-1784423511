@@ -38,6 +38,7 @@ const emptyForm: Partial<Workshop> = {
   smtp_user: "",
   smtp_pass: "",
   smtp_from: "",
+  reminder_email_template: "Hi there,\n\nThis is a friendly reminder that your {{make}} {{model}} ({{registration_number}}) is due for service in {{lead_time}}.\n\nNext service date: {{next_service_date}}\n{{next_service_mileage}}\n\nPlease contact us to book your service.\n\nRegards,\n{{workshop_name}}",
 };
 
 export default function SettingsPage() {
@@ -430,6 +431,20 @@ export default function SettingsPage() {
                     <Label htmlFor="smtp_from">From Address</Label>
                     <Input id="smtp_from" type="email" value={form.smtp_from || ""} onChange={(e) => handleChange("smtp_from", e.target.value)} placeholder="noreply@workshop.com" />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reminder_email_template">Reminder Email Template</Label>
+                  <Textarea
+                    id="reminder_email_template"
+                    value={form.reminder_email_template || ""}
+                    onChange={(e) => handleChange("reminder_email_template", e.target.value)}
+                    rows={8}
+                    placeholder="Hi there,&#10;&#10;This is a reminder that your {{make}} {{model}} ({{registration_number}}) is due for service in {{lead_time}}.&#10;&#10;Next service date: {{next_service_date}}&#10;{{next_service_mileage}}&#10;&#10;Regards,&#10;{{workshop_name}}"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Available variables: <code>{"{{make}}"}</code>, <code>{"{{model}}"}</code>, <code>{"{{registration_number}}"}</code>, <code>{"{{next_service_date}}"}</code>, <code>{"{{next_service_mileage}}"}</code>, <code>{"{{lead_time}}"}</code>, <code>{"{{workshop_name}}"}</code>.
+                  </p>
                 </div>
                 {!smtpStatus.configured && (
                   <div className="rounded-lg bg-destructive/10 p-3 flex gap-2 text-sm text-destructive">

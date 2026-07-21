@@ -21,14 +21,6 @@ interface VehicleWithService {
   current_mileage: number | null;
 }
 
-interface WorkshopSmtp {
-  smtp_host: string | null;
-  smtp_port: number | null;
-  smtp_user: string | null;
-  smtp_pass: string | null;
-  smtp_from: string | null;
-}
-
 interface WorkshopWithTemplate {
   smtp_host: string | null;
   smtp_port: number | null;
@@ -37,35 +29,6 @@ interface WorkshopWithTemplate {
   smtp_from: string | null;
   name: string | null;
   reminder_email_template: string | null;
-}
-
-async function getSmtpConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ host: string; port: number; user: string; pass: string; from: string } | null> {
-  const envConfig = {
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.SMTP_FROM,
-  };
-
-  const { data: workshop, error } = await admin
-    .from("workshops")
-    .select("smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from")
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  const db = workshop as WorkshopSmtp | null;
-  const host = db?.smtp_host || envConfig.host;
-  const port = db?.smtp_port || envConfig.port;
-  const user = db?.smtp_user || envConfig.user;
-  const pass = db?.smtp_pass || envConfig.pass;
-  const from = db?.smtp_from || envConfig.from;
-
-  if (!host || !user || !pass || !from) return null;
-
-  return { host, port, user, pass, from };
 }
 
 async function getWorkshopConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ smtp: { host: string; port: number; user: string; pass: string; from: string } | null; name: string; template: string }> {

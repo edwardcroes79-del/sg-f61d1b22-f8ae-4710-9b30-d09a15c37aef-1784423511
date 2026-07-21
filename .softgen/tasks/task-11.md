@@ -12,11 +12,11 @@ position: 11
 Add a Workshop setting to customize the text of reminder emails sent to vehicle owners. Provide variable substitution for vehicle details.
 
 ## Checklist
-- [ ] Add `reminder_email_template` text column to `workshops`.
-- [ ] Update `Workshop` interface and save payload in `workshopService.ts`.
-- [ ] Add email template textarea in settings with variable hints.
-- [ ] Update `/api/reminders/send.ts` to use saved template with fallback default.
-- [ ] Validate build after changes.
+- [x] Add `reminder_email_template` text column to `workshops`.
+- [x] Update `Workshop` interface and save payload in `workshopService.ts`.
+- [x] Add email template textarea in settings with variable hints.
+- [x] Update `/api/reminders/send.ts` to use saved template with fallback default.
+- [x] Validate build after changes.
 
 ## Acceptance
 - Admin can edit the reminder email body in Settings.

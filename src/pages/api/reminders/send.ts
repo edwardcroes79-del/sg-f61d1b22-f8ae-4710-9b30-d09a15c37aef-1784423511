@@ -22,6 +22,43 @@ interface VehicleWithService {
   owner_name: string | null;
 }
 
+interface WorkshopSmtp {
+  smtp_host: string | null;
+  smtp_port: number | null;
+  smtp_user: string | null;
+  smtp_pass: string | null;
+  smtp_from: string | null;
+}
+
+async function getSmtpConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ host: string; port: number; user: string; pass: string; from: string } | null> {
+  const envConfig = {
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.SMTP_FROM,
+  };
+
+  const { data: workshop, error } = await admin
+    .from("workshops")
+    .select("smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const db = workshop as WorkshopSmtp | null;
+  const host = db?.smtp_host || envConfig.host;
+  const port = db?.smtp_port || envConfig.port;
+  const user = db?.smtp_user || envConfig.user;
+  const pass = db?.smtp_pass || envConfig.pass;
+  const from = db?.smtp_from || envConfig.from;
+
+  if (!host || !user || !pass || !from) return null;
+
+  return { host, port, user, pass, from };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (
@@ -32,17 +69,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const host = process.env.SMTP_HOST;
-    const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    const from = process.env.SMTP_FROM;
+    const admin = getSupabaseAdmin();
 
-    if (!host || !user || !pass || !from) {
+    const smtp = await getSmtpConfig(admin);
+    if (!smtp) {
       return res.status(500).json({ error: "SMTP is not configured" });
     }
-
-    const admin = getSupabaseAdmin();
 
     const { data: preferences, error: prefError } = await admin
       .from("reminder_preferences")
@@ -81,10 +113,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
+      host: smtp.host,
+      port: smtp.port,
+      secure: smtp.port === 465,
+      auth: { user: smtp.user, pass: smtp.pass },
     });
 
     const results: Array<{ id: string; status: "sent" | "failed"; error?: string }> = [];
@@ -95,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       try {
         await transporter.sendMail({
-          from,
+          from: smtp.from,
           to: item.preference.email,
           subject,
           text,

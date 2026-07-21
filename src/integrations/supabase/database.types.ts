@@ -405,6 +405,11 @@ export type Database = {
           powered_by: string | null
           primary_color: string | null
           secondary_color: string | null
+          smtp_from: string | null
+          smtp_host: string | null
+          smtp_pass: string | null
+          smtp_port: number | null
+          smtp_user: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_linkedin: string | null
@@ -425,6 +430,11 @@ export type Database = {
           powered_by?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          smtp_from?: string | null
+          smtp_host?: string | null
+          smtp_pass?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
@@ -445,6 +455,11 @@ export type Database = {
           powered_by?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          smtp_from?: string | null
+          smtp_host?: string | null
+          smtp_pass?: string | null
+          smtp_port?: number | null
+          smtp_user?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null

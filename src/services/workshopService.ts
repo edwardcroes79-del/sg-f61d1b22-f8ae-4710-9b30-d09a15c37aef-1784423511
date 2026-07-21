@@ -17,6 +17,11 @@ export interface Workshop {
   social_instagram?: string;
   social_twitter?: string;
   social_linkedin?: string;
+  smtp_host?: string;
+  smtp_port?: number;
+  smtp_user?: string;
+  smtp_pass?: string;
+  smtp_from?: string;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +63,11 @@ export async function saveWorkshop(workshop: Partial<Workshop> & { name: string 
     social_instagram: workshop.social_instagram,
     social_twitter: workshop.social_twitter,
     social_linkedin: workshop.social_linkedin,
+    smtp_host: workshop.smtp_host,
+    smtp_port: workshop.smtp_port,
+    smtp_user: workshop.smtp_user,
+    smtp_pass: workshop.smtp_pass,
+    smtp_from: workshop.smtp_from,
     updated_at: new Date().toISOString(),
   };
 

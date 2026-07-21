@@ -14,6 +14,7 @@ import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram,
 
 interface SmtpStatus {
   host: string;
+  port: number;
   from: string;
   configured: boolean;
 }
@@ -32,9 +33,14 @@ const emptyForm: Partial<Workshop> = {
   social_instagram: "",
   social_twitter: "",
   social_linkedin: "",
+  smtp_host: "",
+  smtp_port: 587,
+  smtp_user: "",
+  smtp_pass: "",
+  smtp_from: "",
 };
 
-export default function SettingsPage({ smtpStatus }: { smtpStatus: SmtpStatus }) {
+export default function SettingsPage() {
   const { toast } = useToast();
   const { save, refresh, workshop } = useWorkshop();
   const [loading, setLoading] = useState(true);
@@ -49,6 +55,13 @@ export default function SettingsPage({ smtpStatus }: { smtpStatus: SmtpStatus })
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const smtpStatus: SmtpStatus = {
+    host: form.smtp_host || "",
+    port: typeof form.smtp_port === "number" ? form.smtp_port : parseInt(form.smtp_port as any) || 587,
+    from: form.smtp_from || "",
+    configured: !!(form.smtp_host && form.smtp_user && form.smtp_pass && form.smtp_from),
+  };
 
   useEffect(() => {
     if (workshop) {
@@ -392,28 +405,45 @@ export default function SettingsPage({ smtpStatus }: { smtpStatus: SmtpStatus })
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Mail className="w-4 h-4 text-primary" />
-                  SMTP Status
+                  SMTP Configuration
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Host</p>
-                  <p className="text-sm text-muted-foreground font-mono break-all">{smtpStatus.host || "Not set"}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">From Address</p>
-                  <p className="text-sm text-muted-foreground font-mono break-all">{smtpStatus.from || "Not set"}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp_host">Host</Label>
+                    <Input id="smtp_host" value={form.smtp_host || ""} onChange={(e) => handleChange("smtp_host", e.target.value)} placeholder="smtp.example.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp_port">Port</Label>
+                    <Input id="smtp_port" type="number" value={form.smtp_port || 587} onChange={(e) => handleChange("smtp_port", parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp_user">Username</Label>
+                    <Input id="smtp_user" value={form.smtp_user || ""} onChange={(e) => handleChange("smtp_user", e.target.value)} placeholder="user@example.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="smtp_pass">Password</Label>
+                    <Input id="smtp_pass" type="password" value={form.smtp_pass || ""} onChange={(e) => handleChange("smtp_pass", e.target.value)} placeholder="••••••••" />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="smtp_from">From Address</Label>
+                    <Input id="smtp_from" type="email" value={form.smtp_from || ""} onChange={(e) => handleChange("smtp_from", e.target.value)} placeholder="noreply@workshop.com" />
+                  </div>
                 </div>
                 {!smtpStatus.configured && (
                   <div className="rounded-lg bg-destructive/10 p-3 flex gap-2 text-sm text-destructive">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    Add SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in Settings → Environment.
+                    Enter SMTP host, username, password, and from address to enable reminders.
                   </div>
                 )}
                 <Button type="button" onClick={handleSendReminders} disabled={sendingReminders || !smtpStatus.configured} className="w-full">
                   {sendingReminders && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {sendingReminders ? "Sending..." : "Send Due Reminders Now"}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  These values are stored encrypted in your workshop settings and used by the reminder API.
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -482,30 +512,4 @@ export default function SettingsPage({ smtpStatus }: { smtpStatus: SmtpStatus })
       </form>
     </DashboardLayout>
   );
-}
-
-export async function getServerSideProps() {
-  const host = process.env.SMTP_HOST || "";
-  const from = process.env.SMTP_FROM || "";
-
-  const status = {
-    host,
-    from,
-    hasHost: !!process.env.SMTP_HOST,
-    hasUser: !!process.env.SMTP_USER,
-    hasPass: !!process.env.SMTP_PASS,
-    hasFrom: !!process.env.SMTP_FROM,
-  };
-
-  console.log("[settings/getServerSideProps] SMTP env check:", status);
-
-  return {
-    props: {
-      smtpStatus: {
-        host,
-        from,
-        configured: !!(host && process.env.SMTP_USER && process.env.SMTP_PASS && from),
-      },
-    },
-  };
 }

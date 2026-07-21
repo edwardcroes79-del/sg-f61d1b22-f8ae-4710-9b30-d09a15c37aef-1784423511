@@ -19,6 +19,7 @@ interface VehicleWithService {
   next_service_date: string | null;
   next_service_mileage: number | null;
   current_mileage: number | null;
+  customer_id: string | null;
   owner_name: string | null;
 }
 
@@ -85,7 +86,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data: vehicles, error: vehicleError } = await admin
       .from("vehicles")
-      .select("id, registration_number, make, model, next_service_date, next_service_mileage, current_mileage, owner_name")
+      .select(`
+        id,
+        registration_number,
+        make,
+        model,
+        next_service_date,
+        next_service_mileage,
+        current_mileage,
+        customer_id,
+        customers!vehicles_customer_id_fkey (full_name)
+      `)
       .returns<VehicleWithService[]>();
 
     if (vehicleError) throw vehicleError;

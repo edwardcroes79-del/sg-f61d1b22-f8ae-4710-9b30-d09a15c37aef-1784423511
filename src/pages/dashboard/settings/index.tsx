@@ -12,6 +12,12 @@ import { useWorkshop } from "@/contexts/WorkshopContext";
 import { updateEmail, updatePassword } from "@/services/authService";
 import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog, Bell, Send, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
+interface SmtpStatus {
+  host: string;
+  from: string;
+  configured: boolean;
+}
+
 const emptyForm: Partial<Workshop> = {
   name: "",
   logo_url: "",
@@ -28,7 +34,7 @@ const emptyForm: Partial<Workshop> = {
   social_linkedin: "",
 };
 
-export default function SettingsPage() {
+export default function SettingsPage({ smtpStatus }: { smtpStatus: SmtpStatus }) {
   const { toast } = useToast();
   const { save, refresh, workshop } = useWorkshop();
   const [loading, setLoading] = useState(true);
@@ -392,19 +398,19 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Host</p>
-                  <p className="text-sm text-muted-foreground font-mono break-all">{process.env.SMTP_HOST || "Not set"}</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{smtpStatus.host || "Not set"}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">From Address</p>
-                  <p className="text-sm text-muted-foreground font-mono break-all">{process.env.SMTP_FROM || "Not set"}</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{smtpStatus.from || "Not set"}</p>
                 </div>
-                {(!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.SMTP_FROM) && (
+                {!smtpStatus.configured && (
                   <div className="rounded-lg bg-destructive/10 p-3 flex gap-2 text-sm text-destructive">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     Add SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM in Settings → Environment.
                   </div>
                 )}
-                <Button type="button" onClick={handleSendReminders} disabled={sendingReminders} className="w-full">
+                <Button type="button" onClick={handleSendReminders} disabled={sendingReminders || !smtpStatus.configured} className="w-full">
                   {sendingReminders && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {sendingReminders ? "Sending..." : "Send Due Reminders Now"}
                 </Button>
@@ -476,4 +482,19 @@ export default function SettingsPage() {
       </form>
     </DashboardLayout>
   );
+}
+
+export async function getServerSideProps() {
+  const host = process.env.SMTP_HOST || "";
+  const from = process.env.SMTP_FROM || "";
+
+  return {
+    props: {
+      smtpStatus: {
+        host,
+        from,
+        configured: !!(host && process.env.SMTP_USER && process.env.SMTP_PASS && from),
+      },
+    },
+  };
 }

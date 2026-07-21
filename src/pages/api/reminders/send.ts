@@ -19,8 +19,6 @@ interface VehicleWithService {
   next_service_date: string | null;
   next_service_mileage: number | null;
   current_mileage: number | null;
-  customer_id: string | null;
-  owner_name: string | null;
 }
 
 interface WorkshopSmtp {
@@ -93,9 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         model,
         next_service_date,
         next_service_mileage,
-        current_mileage,
-        customer_id,
-        customers!vehicles_customer_id_fkey (full_name)
+        current_mileage
       `)
       .returns<VehicleWithService[]>();
 
@@ -134,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const item of due) {
       const subject = `Service reminder for ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number})`;
-      const text = `Hi ${item.vehicle.owner_name || "there"},\n\nThis is a friendly reminder that your ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number}) is due for service in ${item.label}.\n\nNext service date: ${item.vehicle.next_service_date}\n${item.vehicle.next_service_mileage ? `Next service mileage: ${item.vehicle.next_service_mileage.toLocaleString()} km` : ""}\n\nPlease contact us to book your service.\n\nRegards,\n${process.env.NEXT_PUBLIC_APP_NAME || "Torque Log"}`;
+      const text = `Hi there,\n\nThis is a friendly reminder that your ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registration_number}) is due for service in ${item.label}.\n\nNext service date: ${item.vehicle.next_service_date}\n${item.vehicle.next_service_mileage ? `Next service mileage: ${item.vehicle.next_service_mileage.toLocaleString()} km` : ""}\n\nPlease contact us to book your service.\n\nRegards,\n${process.env.NEXT_PUBLIC_APP_NAME || "Torque Log"}`;
 
       try {
         await transporter.sendMail({

@@ -1,15 +1,15 @@
 ---
 title: Editable service reminder email template
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [settings, reminders, email]
 created_by: agent
-created_at: 2026-07-21T21:12:22Z
+created_at: 2026-07-21T21:15:00Z
 position: 11
 ---
 ## Notes
-Add a Workshop setting to customize the text of reminder emails sent to vehicle owners. Provide variable substitution for vehicle details.
+Allow workshop admins to customize the plain-text email sent for service reminders.
 
 ## Checklist
 - [x] Add `reminder_email_template` text column to `workshops`.
@@ -19,6 +19,7 @@ Add a Workshop setting to customize the text of reminder emails sent to vehicle 
 - [x] Validate build after changes.
 
 ## Acceptance
-- Admin can edit the reminder email body in Settings.
-- Sent reminders use the customized text with variables replaced.
+- Settings shows an editable "Reminder Email Template" field with variable hints.
+- Saving settings persists the customized template.
+- The send-reminders API uses the customized text with variables replaced.
 - If no template is saved, a sensible default is used.

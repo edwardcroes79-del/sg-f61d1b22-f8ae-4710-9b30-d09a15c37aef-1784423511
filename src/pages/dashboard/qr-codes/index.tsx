@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getVehicles, type VehicleWithCustomer } from "@/services/vehicleService";
 import { useWorkshop } from "@/contexts/WorkshopContext";
-import { Search, Printer, QrCode, Check, Download, Loader2, ExternalLink } from "lucide-react";
+import { Search, Printer, QrCode, Check, ExternalLink } from "lucide-react";
 
 function usePublicUrl(slug: string) {
   if (typeof window === "undefined") return "";
@@ -19,11 +18,10 @@ function usePublicUrl(slug: string) {
 
 function VehicleQrCard({ vehicle, index }: { vehicle: VehicleWithCustomer; index: number }) {
   const url = usePublicUrl(vehicle.slug);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!canvasRef.current || !url) return;
-    const canvas = canvasRef.current;
+    if (!url) return;
+    const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -50,7 +48,7 @@ function VehicleQrCard({ vehicle, index }: { vehicle: VehicleWithCustomer; index
 
   return (
     <div className="qr-print-card bg-white rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center break-inside-avoid">
-      <canvas ref={canvasRef} className="w-full max-w-[200px] h-auto" />
+      <canvas className="w-full max-w-[200px] h-auto" />
       <div className="mt-3">
         <p className="font-mono font-semibold text-sm">{vehicle.registration_number}</p>
         <p className="text-xs text-muted-foreground">{vehicle.make} {vehicle.model}</p>
@@ -68,8 +66,6 @@ export default function QrCodesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [generating, setGenerating] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -226,7 +222,7 @@ export default function QrCodesPage() {
           </CardContent>
         </Card>
 
-        <div ref={printRef} className="hidden print:block qr-print-sheet">
+        <div className="hidden print:block qr-print-sheet">
           <div className="print-header hidden print:flex items-center justify-between mb-8 pb-4 border-b">
             <div>
               <h1 className="text-2xl font-heading font-bold">{workshop?.name || "Torque Log"}</h1>
@@ -242,7 +238,7 @@ export default function QrCodesPage() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @media print {
           body * {
             visibility: hidden;

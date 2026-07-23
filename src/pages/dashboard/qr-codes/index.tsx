@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,41 +9,56 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { getVehicles, type VehicleWithCustomer } from "@/services/vehicleService";
 import { useWorkshop } from "@/contexts/WorkshopContext";
-import { Search, Printer, QrCode, Check, ExternalLink } from "lucide-react";
+import { Search, Printer, QrCode, Check, ExternalLink, Eye } from "lucide-react";
 
 function usePublicUrl(slug: string) {
   if (typeof window === "undefined") return "";
   return `${window.location.origin}/vehicle/${slug}`;
 }
 
-function VehicleQrCard({ vehicle }: { vehicle: VehicleWithCustomer }) {
-  const url = usePublicUrl(vehicle.slug);
+interface QrItemProps {
+  vehicle: VehicleWithCustomer;
+  url: string;
+}
+
+function VehicleQrCard({ vehicle, url }: QrItemProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!url || !canvasRef.current) return;
+    let cancelled = false;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const size = 200;
-    canvas.width = size;
-    canvas.height = size;
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
+    canvas.width = 200;
+    canvas.height = 200;
 
     import("qrcode").then((QRCode) => {
-      QRCode.toCanvas(canvas, url, { width: size, margin: 2, color: { dark: "#0F172A", light: "#ffffff" } }, (err) => {
-        if (err) console.error("QR render error", err);
+      QRCode.toCanvas(canvas, url, { width: 200, margin: 2, color: { dark: "#0F172A", light: "#ffffff" } }, (err) => {
+        if (cancelled) return;
+        if (err) {
+          console.error("QR render error", err);
+          return;
+        }
+        setReady(true);
       });
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [url]);
 
   return (
-    <div className="qr-print-card bg-white rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center break-inside-avoid">
-      <canvas ref={canvasRef} className="w-full max-w-[180px] h-auto" />
+    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center break-inside-avoid">
+      <div className="relative">
+        <canvas ref={canvasRef} className="w-full max-w-[180px] h-auto" />
+        {!ready && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+            <QrCode className="w-8 h-8 text-muted-foreground animate-pulse" />
+          </div>
+        )}
+      </div>
       <div className="mt-3">
         <p className="font-mono font-semibold text-sm">{vehicle.registration_number}</p>
         <p className="text-xs text-muted-foreground">{vehicle.make} {vehicle.model}</p>
@@ -90,16 +105,16 @@ export default function QrCodesPage() {
 
   const allSelected = filtered.length > 0 && filtered.every((v) => selected.has(v.id));
 
-  function toggleSelect(id: string) {
+  const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  }
+  }, []);
 
-  function toggleSelectAll() {
+  const toggleSelectAll = useCallback(() => {
     if (allSelected) {
       setSelected((prev) => {
         const next = new Set(prev);
@@ -113,9 +128,9 @@ export default function QrCodesPage() {
         return next;
       });
     }
-  }
+  }, [allSelected, filtered]);
 
-  const selectedVehicles = vehicles.filter((v) => selected.has(v.id));
+  const selectedVehicles = useMemo(() => vehicles.filter((v) => selected.has(v.id)), [vehicles, selected]);
 
   function handlePrint() {
     if (selectedVehicles.length === 0) {
@@ -217,40 +232,50 @@ export default function QrCodesPage() {
           </CardContent>
         </Card>
 
-        <div className="hidden print:block qr-print-sheet">
-          <div className="print-header hidden print:flex items-center justify-between mb-8 pb-4 border-b">
-            <div>
-              <h1 className="text-2xl font-heading font-bold">{workshop?.name || "Torque Log"}</h1>
-              <p className="text-sm text-muted-foreground">Vehicle QR Codes</p>
-            </div>
-            {workshop?.logo_url && <img src={workshop.logo_url} alt="" className="h-12 object-contain" />}
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {selectedVehicles.map((vehicle) => (
-              <VehicleQrCard key={vehicle.id} vehicle={vehicle} />
-            ))}
-          </div>
-        </div>
+        {selectedVehicles.length > 0 && (
+          <Card className="card-premium qr-print-sheet">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-primary" />
+                  Print Preview
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">{selectedVehicles.length} QR code(s) selected</p>
+              </div>
+              <Button className="print:hidden" onClick={handlePrint}>
+                <Printer className="w-4 h-4 mr-2" />
+                Print Now
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="print-header flex items-center justify-between mb-8 pb-4 border-b">
+                <div>
+                  <h1 className="text-2xl font-heading font-bold">{workshop?.name || "Torque Log"}</h1>
+                  <p className="text-sm text-muted-foreground">Vehicle QR Codes</p>
+                </div>
+                {workshop?.logo_url && <img src={workshop.logo_url} alt="" className="h-12 object-contain" />}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {selectedVehicles.map((vehicle) => (
+                  <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={usePublicUrl(vehicle.slug)} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <style>{`
         @media print {
-          body * {
-            visibility: hidden;
+          body {
+            background: white;
           }
-          .qr-print-sheet,
-          .qr-print-sheet * {
-            visibility: visible;
+          .print\\:hidden {
+            display: none !important;
           }
           .qr-print-sheet {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 24px;
-          }
-          .qr-print-card {
-            page-break-inside: avoid;
+            box-shadow: none;
+            border: none;
           }
         }
       `}</style>

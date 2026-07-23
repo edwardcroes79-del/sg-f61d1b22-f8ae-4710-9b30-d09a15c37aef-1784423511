@@ -117,7 +117,6 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
     setLoading(true);
     setError("");
     try {
-      const { getSession } = await import("@/services/authService");
       await verifyMfaChallenge(mfaFactorId, mfaChallengeId, totpCode);
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -156,6 +155,14 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
       } as React.CSSProperties)
     : {};
 
+  const titleText = mode === "login" ? "Welcome back" : mode === "reset" ? "Reset password" : "Verify identity";
+  const descText =
+    mode === "login"
+      ? "Sign in to your workshop dashboard"
+      : mode === "reset"
+      ? "Enter your email to receive a reset link"
+      : "Enter the 6-digit code from your authenticator app";
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6" style={primaryStyle}>
       <div className="w-full max-w-md">
@@ -176,14 +183,8 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
 
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="space-y-1 p-5 sm:p-6">
-            <CardTitle className="font-heading text-xl sm:text-xl">
-              {mode === "login" ? "Welcome back" : "Reset password"}
-            </CardTitle>
-            <CardDescription className="text-sm">
-              {mode === "login"
-                ? "Sign in to your workshop dashboard"
-                : "Enter your email to receive a reset link"}
-            </CardDescription>
+            <CardTitle className="font-heading text-xl sm:text-xl">{titleText}</CardTitle>
+            <CardDescription className="text-sm">{descText}</CardDescription>
           </CardHeader>
           <CardContent className="p-5 sm:p-6 pt-0">
             {mode === "login" ? (
@@ -238,7 +239,7 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
                   </button>
                 </div>
               </form>
-            ) : (
+            ) : mode === "reset" ? (
               <form onSubmit={handleReset} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-email" className="text-sm font-medium">Email</Label>

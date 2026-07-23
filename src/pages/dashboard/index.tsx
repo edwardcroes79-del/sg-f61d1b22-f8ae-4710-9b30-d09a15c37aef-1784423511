@@ -11,6 +11,7 @@ import { getServiceRecordCount } from "@/services/serviceRecordService";
 import { useToast } from "@/hooks/use-toast";
 import { getServiceStatus, formatDate } from "@/lib/utils";
 import { getQuery } from "@/lib/queryCache";
+import { PwaMeta } from "@/components/PwaMeta";
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -45,7 +46,9 @@ export default function DashboardPage() {
   }, [toast]);
 
   return (
-    <DashboardLayout title="Dashboard">
+    <>
+      <PwaMeta themeColor={workshop?.primary_color || "#F8F7F4"} />
+      <SEO title="Dashboard" description="Torque Log admin dashboard" />
       <div className="space-y-8">
         <p className="text-muted-foreground">Overview of your workshop operations</p>
 
@@ -166,6 +169,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { Html, Head, Main, NextScript } from "next/document";
 import { SEOElements } from "@/components/SEO";
 
@@ -7,7 +6,6 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <SEOElements />
-        <link rel="manifest" href="/api/manifest" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -23,11 +21,7 @@ export default function Document() {
           data-softgen-monitoring="true"
         />
       </Head>
-      <body
-        className={cn(
-          "min-h-screen w-full scroll-smooth bg-background text-foreground antialiased"
-        )}
-      >
+      <body className="min-h-screen w-full scroll-smooth bg-background text-foreground antialiased">
         <Main />
         <NextScript />
 

@@ -11,7 +11,7 @@ import { getVehicles, type VehicleWithCustomer } from "@/services/vehicleService
 import { useWorkshop } from "@/contexts/WorkshopContext";
 import { Search, Printer, QrCode, Check, ExternalLink, Eye } from "lucide-react";
 
-function usePublicUrl(slug: string) {
+function getPublicUrl(slug: string) {
   if (typeof window === "undefined") return "";
   return `${window.location.origin}/vehicle/${slug}`;
 }
@@ -130,14 +130,19 @@ export default function QrCodesPage() {
     }
   }, [allSelected, filtered]);
 
-  const selectedVehicles = useMemo(() => vehicles.filter((v) => selected.has(v.id)), [vehicles, selected]);
+  const selectedItems = useMemo(() => {
+    return vehicles
+      .filter((v) => selected.has(v.id))
+      .map((v) => ({ vehicle: v, url: getPublicUrl(v.slug) }));
+  }, [vehicles, selected]);
 
   function handlePrint() {
-    if (selectedVehicles.length === 0) {
+    if (selectedItems.length === 0) {
       toast({ title: "No vehicles selected", description: "Select at least one vehicle to print QR codes." });
       return;
     }
-    window.print();
+    // Wait briefly for any remaining QR canvases to render
+    setTimeout(() => window.print(), 300);
   }
 
   return (
@@ -174,9 +179,9 @@ export default function QrCodesPage() {
                 {allSelected ? <Check className="w-4 h-4 mr-2" /> : null}
                 {allSelected ? "Deselect All" : "Select All"}
               </Button>
-              <Button onClick={handlePrint} disabled={selectedVehicles.length === 0}>
+              <Button onClick={handlePrint} disabled={selectedItems.length === 0}>
                 <Printer className="w-4 h-4 mr-2" />
-                Print {selectedVehicles.length > 0 && `(${selectedVehicles.length})`}
+                Print {selectedItems.length > 0 && `(${selectedItems.length})`}
               </Button>
             </div>
 
@@ -232,7 +237,7 @@ export default function QrCodesPage() {
           </CardContent>
         </Card>
 
-        {selectedVehicles.length > 0 && (
+        {selectedItems.length > 0 && (
           <Card className="card-premium qr-print-sheet">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -240,7 +245,7 @@ export default function QrCodesPage() {
                   <Eye className="w-4 h-4 text-primary" />
                   Print Preview
                 </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">{selectedVehicles.length} QR code(s) selected</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedItems.length} QR code(s) selected</p>
               </div>
               <Button className="print:hidden" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
@@ -256,8 +261,8 @@ export default function QrCodesPage() {
                 {workshop?.logo_url && <img src={workshop.logo_url} alt="" className="h-12 object-contain" />}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {selectedVehicles.map((vehicle) => (
-                  <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={usePublicUrl(vehicle.slug)} />
+                {selectedItems.map(({ vehicle, url }) => (
+                  <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} />
                 ))}
               </div>
             </CardContent>

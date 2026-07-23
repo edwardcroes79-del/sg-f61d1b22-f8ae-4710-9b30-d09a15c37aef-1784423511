@@ -244,7 +244,8 @@ export default function SettingsPage() {
     setMfaLoading(true);
     try {
       const data = await verifyMfaEnrollment(mfaEnrollment.factorId, mfaVerifyCode);
-      setMfaRecoveryCodes(data.recovery_codes || []);
+      const codes = (data as any).recovery_codes || [];
+      setMfaRecoveryCodes(Array.isArray(codes) ? codes : []);
       toast({ title: "MFA enabled", description: "Authenticator app linked successfully." });
       await loadMfaFactors();
     } catch (err: any) {

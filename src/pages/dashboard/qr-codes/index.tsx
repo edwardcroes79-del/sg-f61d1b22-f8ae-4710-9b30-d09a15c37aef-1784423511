@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,39 +16,34 @@ function usePublicUrl(slug: string) {
   return `${window.location.origin}/vehicle/${slug}`;
 }
 
-function VehicleQrCard({ vehicle, index }: { vehicle: VehicleWithCustomer; index: number }) {
+function VehicleQrCard({ vehicle }: { vehicle: VehicleWithCustomer }) {
   const url = usePublicUrl(vehicle.slug);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!url) return;
-    const canvas = document.createElement("canvas");
+    if (!url || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const size = 256;
+    const size = 200;
     canvas.width = size;
-    canvas.height = size + 72;
+    canvas.height = size;
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, size, size);
 
     import("qrcode").then((QRCode) => {
       QRCode.toCanvas(canvas, url, { width: size, margin: 2, color: { dark: "#0F172A", light: "#ffffff" } }, (err) => {
-        if (err) return;
-        ctx.fillStyle = "#0F172A";
-        ctx.font = "bold 22px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(vehicle.registration_number, size / 2, size + 34);
-        ctx.font = "16px system-ui, sans-serif";
-        ctx.fillStyle = "#64748B";
-        ctx.fillText(`${vehicle.make} ${vehicle.model}`, size / 2, size + 58);
+        if (err) console.error("QR render error", err);
       });
     });
-  }, [url, vehicle.registration_number, vehicle.make, vehicle.model]);
+  }, [url]);
 
   return (
     <div className="qr-print-card bg-white rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center break-inside-avoid">
-      <canvas className="w-full max-w-[200px] h-auto" />
+      <canvas ref={canvasRef} className="w-full max-w-[180px] h-auto" />
       <div className="mt-3">
         <p className="font-mono font-semibold text-sm">{vehicle.registration_number}</p>
         <p className="text-xs text-muted-foreground">{vehicle.make} {vehicle.model}</p>
@@ -231,8 +226,8 @@ export default function QrCodesPage() {
             {workshop?.logo_url && <img src={workshop.logo_url} alt="" className="h-12 object-contain" />}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {selectedVehicles.map((vehicle, idx) => (
-              <VehicleQrCard key={vehicle.id} vehicle={vehicle} index={idx} />
+            {selectedVehicles.map((vehicle) => (
+              <VehicleQrCard key={vehicle.id} vehicle={vehicle} />
             ))}
           </div>
         </div>

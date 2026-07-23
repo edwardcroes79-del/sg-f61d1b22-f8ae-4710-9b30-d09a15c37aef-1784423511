@@ -1,6 +1,6 @@
 ---
 title: Remove PWA install prompt from public vehicle pages
-status: in_progress
+status: done
 priority: high
 type: bug
 tags: [pwa, public-page, qr-code, manifest]

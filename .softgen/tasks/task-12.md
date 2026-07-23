@@ -1,6 +1,6 @@
 ---
 title: Fix PWA manifest branding and stale settings chunk
-status: in_progress
+status: done
 priority: urgent
 type: bug
 tags: [pwa, manifest, service-worker, branding, build-cache]
@@ -14,12 +14,12 @@ position: 12
 - Settings page throws a stale `.host` error from an old build chunk.
 
 ## Checklist
-- [ ] Add `background_color` column to `workshops`.
-- [ ] Fix `/api/manifest.ts` to query existing columns only.
-- [ ] Update service worker to use network-first for manifest and logo URLs.
-- [ ] Ensure vehicle public page links to manifest with its slug.
-- [ ] Wipe build cache, rebuild, and restart server.
-- [ ] Validate with `check_for_errors`.
+- [x] Add `background_color` column to `workshops`.
+- [x] Fix `/api/manifest.ts` to query existing columns only.
+- [x] Update service worker to use network-first for manifest and logo URLs.
+- [x] Ensure vehicle public page links to manifest with its slug.
+- [x] Wipe build cache, rebuild, and restart server.
+- [x] Validate with `check_for_errors`.
 
 ## Acceptance
 - Phone-installed app shows the uploaded workshop logo and name.

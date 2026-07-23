@@ -23,6 +23,7 @@ export interface Workshop {
   smtp_pass?: string;
   smtp_from?: string;
   reminder_email_template?: string;
+  background_color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +71,7 @@ export async function saveWorkshop(workshop: Partial<Workshop> & { name: string 
     smtp_pass: workshop.smtp_pass,
     smtp_from: workshop.smtp_from,
     reminder_email_template: workshop.reminder_email_template,
+    background_color: workshop.background_color,
     updated_at: new Date().toISOString(),
   };
 

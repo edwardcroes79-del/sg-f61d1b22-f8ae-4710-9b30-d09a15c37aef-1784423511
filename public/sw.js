@@ -1,9 +1,11 @@
-const CACHE_NAME = "torque-log-v1";
+const CACHE_NAME = "torque-log-v2";
+
+const STATIC_ASSETS = ["/", "/offline"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(["/", "/offline"]);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
   self.skipWaiting();
@@ -57,8 +59,39 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+function isNetworkFirst(request) {
+  const url = new URL(request.url);
+  return (
+    url.pathname.startsWith("/api/manifest") ||
+    url.pathname.startsWith("/storage/v1/object/public/")
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  if (isNetworkFirst(event.request)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            if (event.request.mode === "navigate") {
+              return caches.match("/offline") || caches.match("/");
+            }
+            return new Response("Offline", { status: 503 });
+          });
+        })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

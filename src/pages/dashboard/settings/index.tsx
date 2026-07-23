@@ -24,6 +24,7 @@ const emptyForm: Partial<Workshop> = {
   logo_url: "",
   primary_color: "#D97706",
   secondary_color: "#64748B",
+  background_color: "#F8F7F4",
   contact_phone: "",
   contact_email: "",
   contact_address: "",
@@ -289,6 +290,13 @@ export default function SettingsPage() {
                   <div className="flex gap-3">
                     <Input id="secondary_color" type="color" value={form.secondary_color || "#64748B"} onChange={(e) => handleChange("secondary_color", e.target.value)} className="w-16 h-10 p-1" />
                     <Input value={form.secondary_color || "#64748B"} onChange={(e) => handleChange("secondary_color", e.target.value)} className="flex-1 font-mono" />
+                  </div>
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="background_color">Background Color</Label>
+                  <div className="flex gap-3">
+                    <Input id="background_color" type="color" value={form.background_color || "#F8F7F4"} onChange={(e) => handleChange("background_color", e.target.value)} className="w-16 h-10 p-1" />
+                    <Input value={form.background_color || "#F8F7F4"} onChange={(e) => handleChange("background_color", e.target.value)} className="flex-1 font-mono" />
                   </div>
                 </div>
               </div>

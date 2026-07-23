@@ -102,23 +102,12 @@ export default function PublicVehiclePage() {
   const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showIosHint, setShowIosHint] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   const [reminderEmail, setReminderEmail] = useState("");
   const [reminderOneDay, setReminderOneDay] = useState(true);
   const [reminderOneWeek, setReminderOneWeek] = useState(false);
   const [reminderLoading, setReminderLoading] = useState(false);
   const [reminderSaved, setReminderSaved] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true);
-
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window.navigator as any).standalone) {
-      setShowIosHint(true);
-    }
-  }, []);
 
   async function handleReminderSubmit(e: React.FormEvent) {
     e.preventDefault();

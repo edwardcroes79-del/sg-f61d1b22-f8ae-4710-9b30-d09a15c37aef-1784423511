@@ -12,9 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { getServiceStatus, formatDate } from "@/lib/utils";
 import { getQuery } from "@/lib/queryCache";
 import { PwaMeta } from "@/components/PwaMeta";
+import { useWorkshop } from "@/contexts/WorkshopContext";
+import { SEO } from "@/components/SEO";
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const { workshop } = useWorkshop();
   const [counts, setCounts] = useState({
     vehicles: 0,
     customers: 0,

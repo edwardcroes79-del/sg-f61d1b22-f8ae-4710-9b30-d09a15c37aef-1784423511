@@ -11,17 +11,6 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
-    const pathname = window.location.pathname;
-    if (pathname.startsWith("/vehicle/")) return;
-
-    navigator.serviceWorker
-      .register("/sw.js")
-      .catch((err) => console.error("Service worker registration failed:", err));
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-
     const isPublicPage = router.pathname.startsWith("/vehicle/");
     if (isPublicPage) return;
 

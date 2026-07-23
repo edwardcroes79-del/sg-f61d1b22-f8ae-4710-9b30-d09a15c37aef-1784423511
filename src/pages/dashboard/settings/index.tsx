@@ -9,8 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { getWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/workshopService";
 import { useWorkshop } from "@/contexts/WorkshopContext";
-import { updateEmail, updatePassword } from "@/services/authService";
-import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog, Bell, Send, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { updateEmail, updatePassword, getMfaFactors, enrollMfaFactor, verifyMfaEnrollment, unenrollMfaFactor } from "@/services/authService";
+import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog, Bell, Send, AlertTriangle, CheckCircle2, XCircle, Shield, ShieldCheck, Copy, Download, QrCode } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface SmtpStatus {
@@ -59,6 +59,13 @@ export default function SettingsPage() {
   const [sendingReminders, setSendingReminders] = useState(false);
   const [clearingLog, setClearingLog] = useState(false);
   const [showClearLogDialog, setShowClearLogDialog] = useState(false);
+
+  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaEnrollment, setMfaEnrollment] = useState<{ factorId: string; qr: string; secret: string } | null>(null);
+  const [mfaVerifyCode, setMfaVerifyCode] = useState("");
+  const [mfaRecoveryCodes, setMfaRecoveryCodes] = useState<string[]>([]);
+  const [showDisableMfaDialog, setShowDisableMfaDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const smtpStatus: SmtpStatus = {
@@ -79,7 +86,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchDeliveries();
+    loadMfaFactors();
   }, []);
+
+  async function loadMfaFactors() {
+    try {
+      const data = await getMfaFactors();
+      setMfaFactors([...(data.totp || [])]);
+    } catch (err: any) {
+      console.error("MFA load error:", err);
+    }
+  }
 
   async function fetchDeliveries() {
     setLoadingDeliveries(true);
@@ -201,6 +218,62 @@ export default function SettingsPage() {
     } finally {
       setClearingLog(false);
     }
+  }
+
+  async function handleStartMfaEnrollment() {
+    setMfaLoading(true);
+    setMfaEnrollment(null);
+    setMfaRecoveryCodes([]);
+    setMfaVerifyCode("");
+    try {
+      const data = await enrollMfaFactor();
+      setMfaEnrollment({
+        factorId: data.id,
+        qr: data.totp.qr_code,
+        secret: data.totp.secret,
+      });
+    } catch (err: any) {
+      toast({ title: "MFA enrollment failed", description: err.message, variant: "destructive" });
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  async function handleVerifyMfaEnrollment() {
+    if (!mfaEnrollment || mfaVerifyCode.length !== 6) return;
+    setMfaLoading(true);
+    try {
+      const data = await verifyMfaEnrollment(mfaEnrollment.factorId, mfaVerifyCode);
+      setMfaRecoveryCodes(data.recovery_codes || []);
+      toast({ title: "MFA enabled", description: "Authenticator app linked successfully." });
+      await loadMfaFactors();
+    } catch (err: any) {
+      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  async function handleDisableMfa() {
+    const factor = mfaFactors[0];
+    if (!factor) return;
+    setMfaLoading(true);
+    try {
+      await unenrollMfaFactor(factor.id);
+      toast({ title: "MFA disabled" });
+      setShowDisableMfaDialog(false);
+      await loadMfaFactors();
+    } catch (err: any) {
+      toast({ title: "Could not disable MFA", description: err.message, variant: "destructive" });
+    } finally {
+      setMfaLoading(false);
+    }
+  }
+
+  function copyRecoveryCodes() {
+    if (!mfaRecoveryCodes.length) return;
+    navigator.clipboard.writeText(mfaRecoveryCodes.join("\n"));
+    toast({ title: "Recovery codes copied" });
   }
 
   if (loading) {
@@ -549,6 +622,109 @@ export default function SettingsPage() {
                 </Button>
               </CardContent>
             </Card>
+
+            <Card className="card-premium">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Shield className="w-4 h-4 text-primary" />
+                  Two-Factor Authentication
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {mfaFactors.length > 0 ? (
+                  <div className="rounded-lg bg-success/10 p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-success">
+                      <ShieldCheck className="w-4 h-4" />
+                      MFA is enabled
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowDisableMfaDialog(true)} disabled={mfaLoading}>
+                      Disable
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Add an extra layer of security by requiring a code from an authenticator app when signing in.
+                    </p>
+                    {!mfaEnrollment ? (
+                      <Button type="button" onClick={handleStartMfaEnrollment} disabled={mfaLoading} className="w-full">
+                        {mfaLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        <QrCode className="w-4 h-4 mr-2" />
+                        Set Up Authenticator
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted">
+                          <img src={mfaEnrollment.qr} alt="MFA QR code" className="w-48 h-48" />
+                          <p className="text-xs text-muted-foreground text-center">
+                            Scan this QR code with your authenticator app, or enter the secret manually.
+                          </p>
+                          <div className="flex items-center gap-2 w-full">
+                            <code className="flex-1 text-xs font-mono bg-background p-2 rounded border break-all">
+                              {mfaEnrollment.secret}
+                            </code>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(mfaEnrollment.secret); toast({ title: "Secret copied" }); }}>
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="mfa-code">Verification Code</Label>
+                          <Input
+                            id="mfa-code"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            placeholder="000000"
+                            value={mfaVerifyCode}
+                            onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            className="h-12 text-center text-2xl tracking-[0.5em] font-mono"
+                          />
+                        </div>
+                        <Button type="button" onClick={handleVerifyMfaEnrollment} disabled={mfaLoading || mfaVerifyCode.length !== 6} className="w-full">
+                          {mfaLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                          Verify & Enable MFA
+                        </Button>
+                      </div>
+                    )}
+
+                    {mfaRecoveryCodes.length > 0 && (
+                      <div className="rounded-lg border p-4 space-y-3">
+                        <h4 className="font-medium text-sm">Recovery Codes</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Save these codes in a safe place. They can be used to access your account if you lose your authenticator device.
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {mfaRecoveryCodes.map((code) => (
+                            <code key={code} className="text-xs font-mono bg-muted p-2 rounded text-center">
+                              {code}
+                            </code>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={copyRecoveryCodes}>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy Codes
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => {
+                            const blob = new Blob([mfaRecoveryCodes.join("\n")], { type: "text/plain" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "torque-log-recovery-codes.txt";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -575,6 +751,24 @@ export default function SettingsPage() {
             <Button variant="destructive" onClick={handleClearLog} disabled={clearingLog}>
               {clearingLog && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {clearingLog ? "Clearing..." : "Clear Log"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDisableMfaDialog} onOpenChange={setShowDisableMfaDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Disable two-factor authentication?</DialogTitle>
+            <DialogDescription>
+              This removes the extra security layer from your account. You will only need your password to sign in.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDisableMfaDialog(false)} disabled={mfaLoading}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDisableMfa} disabled={mfaLoading}>
+              {mfaLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Disable MFA
             </Button>
           </DialogFooter>
         </DialogContent>

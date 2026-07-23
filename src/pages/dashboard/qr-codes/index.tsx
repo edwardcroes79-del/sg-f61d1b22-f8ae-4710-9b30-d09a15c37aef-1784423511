@@ -20,16 +20,13 @@ interface QrItemProps {
   vehicle: VehicleWithCustomer;
   url: string;
   size: number;
-  onReady?: () => void;
 }
 
-function VehicleQrCard({ vehicle, url, size, onReady }: QrItemProps) {
+function VehicleQrCard({ vehicle, url, size }: QrItemProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!url || !canvasRef.current) return;
-    let cancelled = false;
-
     const canvas = canvasRef.current;
     canvas.width = size;
     canvas.height = size;
@@ -40,27 +37,18 @@ function VehicleQrCard({ vehicle, url, size, onReady }: QrItemProps) {
         url,
         { width: size, margin: 1, color: { dark: "#0F172A", light: "#ffffff" } },
         (err) => {
-          if (cancelled) return;
-          if (err) {
-            console.error("QR render error", err);
-            return;
-          }
-          onReady?.();
+          if (err) console.error("QR render error", err);
         }
       );
     });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url, size, onReady]);
+  }, [url, size]);
 
   return (
-    <div className="flex flex-col items-center text-center page-break-inside-avoid">
-      <canvas ref={canvasRef} style={{ width: size, height: size }} />
-      <p className="font-mono font-semibold text-[11px] mt-2 leading-tight">{vehicle.registration_number}</p>
-      <p className="text-[9px] text-gray-600 leading-tight">{vehicle.make} {vehicle.model}</p>
-      {vehicle.customer?.full_name && <p className="text-[9px] text-gray-600 leading-tight">{vehicle.customer.full_name}</p>}
+    <div className="qr-tile">
+      <canvas ref={canvasRef} width={size} height={size} style={{ width: size, height: size }} />
+      <p className="qr-plate">{vehicle.registration_number}</p>
+      <p className="qr-meta">{vehicle.make} {vehicle.model}</p>
+      {vehicle.customer?.full_name && <p className="qr-meta">{vehicle.customer.full_name}</p>}
     </div>
   );
 }
@@ -72,7 +60,7 @@ export default function QrCodesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [readyCount, setReadyCount] = useState(0);
+  const [showPrint, setShowPrint] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -136,27 +124,25 @@ export default function QrCodesPage() {
       toast({ title: "No vehicles selected", description: "Select at least one vehicle to print QR codes." });
       return;
     }
-    if (readyCount < selectedItems.length) {
-      toast({ title: "Generating QR codes", description: "Please wait a moment and try again." });
-      return;
-    }
-    window.print();
+    setShowPrint(true);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => setShowPrint(false), 500);
+    }, 500);
   }
 
   return (
     <>
       <DashboardLayout title="QR Codes">
-        <div className="space-y-6 selection-section">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <p className="text-muted-foreground">Generate and print vehicle QR codes</p>
-            <div className="flex gap-2">
-              <Button variant="outline" asChild>
-                <Link href="/dashboard/vehicles">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Vehicles
-                </Link>
-              </Button>
-            </div>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/vehicles">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Vehicles
+              </Link>
+            </Button>
           </div>
 
           <Card className="card-premium">
@@ -240,69 +226,111 @@ export default function QrCodesPage() {
         </div>
       </DashboardLayout>
 
-      {selectedItems.length > 0 && (
-        <div className="qr-print-only">
-          <div className="qr-print-header">
+      <div id="qr-print-portal" className={showPrint ? "print-open" : "print-closed"} aria-hidden={!showPrint}>
+        <div className="print-sheet">
+          <div className="print-sheet-header">
             <div>
-              <h1 className="text-xl font-bold">{workshop?.name || "Torque Log"}</h1>
-              <p className="text-sm text-gray-600">Vehicle QR Codes — {selectedItems.length} total</p>
+              <h1>{workshop?.name || "Torque Log"}</h1>
+              <p>Vehicle QR Codes — {selectedItems.length} total</p>
             </div>
-            {workshop?.logo_url && (
-              <img src={workshop.logo_url} alt="" className="h-10 object-contain" />
-            )}
+            {workshop?.logo_url && <img src={workshop.logo_url} alt="" />}
           </div>
-          <div className="qr-print-grid">
+          <div className="print-sheet-grid">
             {selectedItems.map(({ vehicle, url }) => (
-              <VehicleQrCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                url={url}
-                size={140}
-                onReady={() => setReadyCount((c) => c + 1)}
-              />
+              <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} size={120} />
             ))}
           </div>
         </div>
-      )}
+      </div>
 
       <style>{`
-        .qr-print-only {
+        .print-closed {
           display: none;
+        }
+        .print-open {
+          display: block;
+        }
+        .print-sheet {
+          background: white;
+          padding: 8mm;
+        }
+        .print-sheet-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 6mm;
+          padding-bottom: 3mm;
+          border-bottom: 1px solid #ddd;
+        }
+        .print-sheet-header h1 {
+          font-size: 16px;
+          font-weight: 700;
+          margin: 0;
+        }
+        .print-sheet-header p {
+          font-size: 11px;
+          color: #555;
+          margin: 0;
+        }
+        .print-sheet-header img {
+          height: 28px;
+          object-fit: contain;
+        }
+        .print-sheet-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 6mm;
+        }
+        .qr-tile {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          page-break-inside: avoid;
+        }
+        .qr-plate {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-weight: 600;
+          font-size: 10px;
+          margin-top: 6px;
+          margin-bottom: 2px;
+          line-height: 1.2;
+        }
+        .qr-meta {
+          font-size: 8px;
+          color: #444;
+          line-height: 1.2;
+          margin: 0;
         }
         @media print {
           @page {
             size: A4 landscape;
-            margin: 10mm;
+            margin: 6mm;
           }
           html, body {
             background: white !important;
           }
-          /* Hide everything except print area */
-          body > * {
+          body * {
+            visibility: hidden;
+          }
+          #qr-print-portal,
+          #qr-print-portal * {
+            visibility: visible;
+          }
+          #qr-print-portal {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .print-closed {
             display: none !important;
           }
-          .qr-print-only {
+          .print-open {
             display: block !important;
-            position: fixed;
-            inset: 0;
-            background: white;
-            padding: 10mm;
-            z-index: 99999;
-            overflow: visible;
           }
-          .qr-print-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8mm;
-            padding-bottom: 4mm;
-            border-bottom: 1px solid #ddd;
-          }
-          .qr-print-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10mm;
-            width: 100%;
+          .print-sheet-grid {
+            grid-template-columns: repeat(5, 1fr);
           }
         }
       `}</style>

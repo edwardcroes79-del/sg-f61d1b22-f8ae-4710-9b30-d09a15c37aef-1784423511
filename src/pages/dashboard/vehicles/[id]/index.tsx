@@ -32,6 +32,8 @@ import {
   Cog,
   Paintbrush,
   Wrench,
+  Bell,
+  Loader2,
 } from "lucide-react";
 import { ServiceRecordSection } from "@/components/dashboard/ServiceRecordSection";
 
@@ -42,6 +44,7 @@ export default function VehicleDetailPage() {
   const [vehicle, setVehicle] = useState<VehicleWithCustomer | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -66,6 +69,29 @@ export default function VehicleDetailPage() {
       router.push("/dashboard/vehicles");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  }
+
+  async function handleSendTestReminder() {
+    if (!vehicle) return;
+    if (!vehicle.customer.email) {
+      toast({ title: "No email", description: "This customer has no registered email address.", variant: "destructive" });
+      return;
+    }
+    setSendingReminder(true);
+    try {
+      const res = await fetch("/api/reminders/send-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vehicle_id: vehicle.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to send test reminder");
+      toast({ title: "Test reminder sent", description: json.message });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingReminder(false);
     }
   }
 
@@ -204,11 +230,25 @@ export default function VehicleDetailPage() {
 
           <div className="space-y-6">
             <Card className={`card-premium border-l-4 ${status.status === "overdue" ? "border-l-danger" : status.status === "due" ? "border-l-warning" : "border-l-success"}`}>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Gauge className="w-5 h-5 text-primary" />
                   Service Status
                 </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTestReminder}
+                  disabled={sendingReminder || !vehicle.customer.email}
+                  title={vehicle.customer.email ? "Send test reminder email" : "Customer has no email"}
+                >
+                  {sendingReminder ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Bell className="w-4 h-4 mr-2" />
+                  )}
+                  Test Reminder
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">

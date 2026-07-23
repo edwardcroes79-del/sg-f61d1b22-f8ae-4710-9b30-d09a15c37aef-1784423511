@@ -13,10 +13,10 @@ position: 16
 Add a button to the vehicle detail dashboard page that sends a test service reminder email to the customer's registered email, regardless of due date.
 
 ## Checklist
-- [ ] Create `/api/reminders/send-test.ts` endpoint.
-- [ ] Reuse reminder template and SMTP config.
-- [ ] Add button to vehicle detail page.
-- [ ] Show toast/alert with result.
+- [x] Create `/api/reminders/send-test.ts` endpoint.
+- [x] Reuse reminder template and SMTP config.
+- [x] Add button to vehicle detail page.
+- [x] Show toast/alert with result.
 - [ ] Validate build.
 
 ## Acceptance

@@ -61,7 +61,8 @@ export async function getMfaFactors() {
 }
 
 export async function enrollMfaFactor() {
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Authenticator App" });
+  const friendlyName = `Authenticator ${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName });
   if (error) throw error;
   return data;
 }

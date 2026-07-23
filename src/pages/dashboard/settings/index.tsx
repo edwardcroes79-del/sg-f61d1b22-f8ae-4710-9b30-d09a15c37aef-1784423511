@@ -226,6 +226,12 @@ export default function SettingsPage() {
     setMfaRecoveryCodes([]);
     setMfaVerifyCode("");
     try {
+      const factors = await getMfaFactors();
+      for (const factor of factors.totp || []) {
+        if (factor.status === "unverified") {
+          await unenrollMfaFactor(factor.id);
+        }
+      }
       const data = await enrollMfaFactor();
       setMfaEnrollment({
         factorId: data.id,

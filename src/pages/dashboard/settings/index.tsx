@@ -228,9 +228,7 @@ export default function SettingsPage() {
     try {
       const factors = await getMfaFactors();
       for (const factor of factors.totp || []) {
-        if (factor.status === "unverified") {
-          await unenrollMfaFactor(factor.id);
-        }
+        await unenrollMfaFactor(factor.id);
       }
       const data = await enrollMfaFactor();
       setMfaEnrollment({

@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const oneWeekIso = oneWeek.toISOString().slice(0, 10);
     const oneDayIso = oneDay.toISOString().slice(0, 10);
 
-    // Find vehicles due in 1 week or 1 day whose owner has an email
+    // Fetch vehicles with customer emails; filter exact due dates in code to avoid .or() quirks
     const { data: customersWithVehicles, error: joinError } = await admin
       .from("vehicles")
       .select(`
@@ -105,24 +105,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customer:customers (id, full_name, email)
       `)
       .not("next_service_date", "is", null)
-      .or(`next_service_date.eq.${oneWeekIso},next_service_date.eq.${oneDayIso}`)
       .not("customer.email", "is", null);
 
     if (joinError) throw joinError;
 
-    const candidates = (customersWithVehicles || []).map((row: any) => ({
-      vehicle_id: row.id,
-      email: row.customer?.email,
-      full_name: row.customer?.full_name,
-      vehicle: {
-        id: row.id,
-        registration_number: row.registration_number,
-        make: row.make,
-        model: row.model,
-        next_service_date: row.next_service_date,
-        next_service_mileage: row.next_service_mileage,
-      },
-    })).filter((c): c is CustomerWithVehicle => !!c.email) as CustomerWithVehicle[];
+    const candidates = (customersWithVehicles || [])
+      .map((row: any) => ({
+        vehicle_id: row.id,
+        email: row.customer?.email,
+        full_name: row.customer?.full_name,
+        vehicle: {
+          id: row.id,
+          registration_number: row.registration_number,
+          make: row.make,
+          model: row.model,
+          next_service_date: row.next_service_date,
+          next_service_mileage: row.next_service_mileage,
+        },
+      }))
+      .filter((c): c is CustomerWithVehicle => !!c.email) as CustomerWithVehicle[];
 
     // Check already-sent deliveries for today
     const { data: deliveries, error: deliveryError } = await admin
@@ -138,21 +139,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const due: Array<{ candidate: CustomerWithVehicle; leadTime: number; label: string; nextDate: Date }> = [];
 
     for (const candidate of candidates) {
-      const nextDate = new Date(candidate.vehicle.next_service_date as string);
-      nextDate.setHours(0, 0, 0, 0);
-      const diffMs = nextDate.getTime() - today.getTime();
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      const nextDateIso = (candidate.vehicle.next_service_date as string).slice(0, 10);
+      if (nextDateIso !== oneWeekIso && nextDateIso !== oneDayIso) continue;
 
-      const windows: Array<{ days: number; label: string }> = [
-        { days: 7, label: "1 week" },
-        { days: 1, label: "1 day" },
-      ];
+      const label = nextDateIso === oneWeekIso ? "1 week" : "1 day";
+      if (sentToday.has(`${candidate.vehicle_id}:${label}`)) continue;
 
-      for (const win of windows) {
-        if (diffDays === win.days && !sentToday.has(`${candidate.vehicle_id}:${win.label}`)) {
-          due.push({ candidate, leadTime: win.days, label: win.label, nextDate });
-        }
-      }
+      due.push({ candidate, leadTime: label === "1 week" ? 7 : 1, label, nextDate: new Date(`${nextDateIso}T00:00:00`) });
     }
 
     const transporter = nodemailer.createTransport({

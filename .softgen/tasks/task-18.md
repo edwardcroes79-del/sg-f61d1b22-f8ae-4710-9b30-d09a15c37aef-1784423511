@@ -1,6 +1,6 @@
 ---
 title: Implement MFA with TOTP for administrators
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [auth, mfa, security, supabase]
@@ -13,11 +13,11 @@ position: 18
 Add TOTP-based multi-factor authentication for admin accounts using Supabase Auth MFA. Admins can enable MFA in Settings, and login requires TOTP verification when enabled.
 
 ## Checklist
-- [ ] Inspect Supabase MFA factor state and add helpers in authService.
-- [ ] Update login flow to detect MFA challenge and show TOTP input screen.
-- [ ] Add MFA enrollment UI in Settings (QR code + verify first code + recovery codes).
-- [ ] Add option to disable/unenroll MFA with confirmation.
-- [ ] Verify build and auth flows.
+- [x] Inspect Supabase MFA factor state and add helpers in authService.
+- [x] Update login flow to detect MFA challenge and show TOTP input screen.
+- [x] Add MFA enrollment UI in Settings (QR code + verify first code + recovery codes).
+- [x] Add option to disable/unenroll MFA with confirmation.
+- [x] Verify build and auth flows.
 
 ## Acceptance
 - Admin can enable MFA from Settings.

@@ -50,21 +50,16 @@ function VehicleQrCard({ vehicle, url }: QrItemProps) {
   }, [url]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center break-inside-avoid">
-      <div className="relative">
-        <canvas ref={canvasRef} className="w-full max-w-[180px] h-auto" />
-        {!ready && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-            <QrCode className="w-8 h-8 text-muted-foreground animate-pulse" />
-          </div>
-        )}
-      </div>
-      <div className="mt-3">
-        <p className="font-mono font-semibold text-sm">{vehicle.registration_number}</p>
-        <p className="text-xs text-muted-foreground">{vehicle.make} {vehicle.model}</p>
-        {vehicle.customer?.full_name && <p className="text-xs text-muted-foreground mt-0.5">{vehicle.customer.full_name}</p>}
-      </div>
-      <p className="text-[10px] text-muted-foreground mt-2 truncate max-w-full">{url}</p>
+    <div className="flex flex-col items-center text-center page-break-inside-avoid">
+      <canvas ref={canvasRef} className="w-40 h-40" />
+      {!ready && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded">
+          <QrCode className="w-8 h-8 text-muted-foreground animate-pulse" />
+        </div>
+      )}
+      <p className="font-mono font-semibold text-sm mt-3">{vehicle.registration_number}</p>
+      <p className="text-xs text-gray-600">{vehicle.make} {vehicle.model}</p>
+      {vehicle.customer?.full_name && <p className="text-xs text-gray-600">{vehicle.customer.full_name}</p>}
     </div>
   );
 }
@@ -141,13 +136,12 @@ export default function QrCodesPage() {
       toast({ title: "No vehicles selected", description: "Select at least one vehicle to print QR codes." });
       return;
     }
-    // Wait briefly for any remaining QR canvases to render
     setTimeout(() => window.print(), 300);
   }
 
   return (
     <DashboardLayout title="QR Codes">
-      <div className="space-y-6">
+      <div className="space-y-6 print:hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <p className="text-muted-foreground">Generate and print vehicle QR codes</p>
           <div className="flex gap-2">
@@ -160,7 +154,7 @@ export default function QrCodesPage() {
           </div>
         </div>
 
-        <Card className="card-premium print:hidden">
+        <Card className="card-premium">
           <CardHeader>
             <CardTitle className="text-base">Select Vehicles</CardTitle>
           </CardHeader>
@@ -238,7 +232,7 @@ export default function QrCodesPage() {
         </Card>
 
         {selectedItems.length > 0 && (
-          <Card className="card-premium qr-print-sheet">
+          <Card className="card-premium">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -247,19 +241,12 @@ export default function QrCodesPage() {
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-1">{selectedItems.length} QR code(s) selected</p>
               </div>
-              <Button className="print:hidden" onClick={handlePrint}>
+              <Button onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print Now
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="print-header flex items-center justify-between mb-8 pb-4 border-b">
-                <div>
-                  <h1 className="text-2xl font-heading font-bold">{workshop?.name || "Torque Log"}</h1>
-                  <p className="text-sm text-muted-foreground">Vehicle QR Codes</p>
-                </div>
-                {workshop?.logo_url && <img src={workshop.logo_url} alt="" className="h-12 object-contain" />}
-              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {selectedItems.map(({ vehicle, url }) => (
                   <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} />
@@ -270,20 +257,99 @@ export default function QrCodesPage() {
         )}
       </div>
 
-      <style>{`
-        @media print {
-          body {
-            background: white;
+      <div id="print-content" className="hidden print:block">
+        <style>{`
+          @page {
+            size: A4 landscape;
+            margin: 10mm;
           }
-          .print\\:hidden {
-            display: none !important;
+          @media print {
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              padding: 0;
+              background: white;
+            }
+            #print-content {
+              display: block !important;
+              width: 100%;
+              margin: 0;
+              padding: 0;
+            }
+            .print-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 20px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #ddd;
+            }
+            .print-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 30px;
+              width: 100%;
+            }
+            .page-break-inside-avoid {
+              page-break-inside: avoid;
+            }
+            .print-qr-card {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              text-align: center;
+            }
+            .print-qr-card canvas {
+              width: 140px;
+              height: 140px;
+              margin-bottom: 8px;
+            }
+            .print-qr-card p {
+              margin: 0;
+              padding: 0;
+            }
+            .print-qr-card .reg {
+              font-family: monospace;
+              font-weight: 600;
+              font-size: 12px;
+              margin-bottom: 4px;
+            }
+            .print-qr-card .vehicle-info {
+              font-size: 10px;
+              color: #666;
+              line-height: 1.3;
+            }
           }
-          .qr-print-sheet {
-            box-shadow: none;
-            border: none;
-          }
-        }
-      `}</style>
+        `}</style>
+        <div className="print-header">
+          <div>
+            <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 4px 0" }}>{workshop?.name || "Torque Log"}</h1>
+            <p style={{ fontSize: "14px", color: "#666", margin: 0 }}>Vehicle QR Codes</p>
+          </div>
+          {workshop?.logo_url && <img src={workshop.logo_url} alt="" style={{ height: "40px", objectFit: "contain" }} />}
+        </div>
+        <div className="print-grid">
+          {selectedItems.map(({ vehicle, url }) => (
+            <div key={vehicle.id} className="page-break-inside-avoid print-qr-card">
+              <canvas
+                ref={(canvas) => {
+                  if (canvas && url) {
+                    canvas.width = 140;
+                    canvas.height = 140;
+                    import("qrcode").then((QRCode) => {
+                      QRCode.toCanvas(canvas, url, { width: 140, margin: 2, color: { dark: "#0F172A", light: "#ffffff" } });
+                    });
+                  }
+                }}
+              />
+              <p className="reg">{vehicle.registration_number}</p>
+              <p className="vehicle-info">{vehicle.make} {vehicle.model}</p>
+              {vehicle.customer?.full_name && <p className="vehicle-info">{vehicle.customer.full_name}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
     </DashboardLayout>
   );
 }

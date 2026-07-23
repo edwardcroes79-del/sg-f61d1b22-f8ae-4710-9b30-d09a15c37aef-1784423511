@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PwaMeta themeColor={workshop?.primary_color || "#F8F7F4"} />
+      <PwaMeta themeColor={workshop?.primary_color || "#F8F7F4"} logoUrl={workshop?.logo_url} appName={workshop?.name || "Torque Log"} />
       <SEO title="Dashboard" description="Torque Log admin dashboard" />
       <div className="space-y-8">
         <p className="text-muted-foreground">Overview of your workshop operations</p>

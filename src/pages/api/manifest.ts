@@ -1,63 +1,66 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/integrations/supabase/admin";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { slug } = req.query;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  try {
+    const admin = getSupabaseAdmin();
 
-  let name = "Torque Log";
-  let shortName = "Torque Log";
-  let themeColor = "#D97706";
-  let backgroundColor = "#F8F7F4";
-  let iconUrl: string | undefined;
-
-  if (supabaseUrl && supabaseAnonKey) {
-    const serverClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
-
-    const { data } = await serverClient
+    const { data: workshop, error } = await admin
       .from("workshops")
-      .select("name, logo_url, primary_color, background_color")
+      .select("name, logo_url, primary_color, secondary_color, background_color")
       .limit(1)
       .maybeSingle();
 
-    if (data) {
-      name = data.name || name;
-      shortName = data.name ? data.name.slice(0, 12) : shortName;
-      themeColor = data.primary_color || themeColor;
-      backgroundColor = data.background_color || backgroundColor;
-      iconUrl = data.logo_url || undefined;
-    }
+    if (error) throw error;
+
+    const name = workshop?.name || "Torque Log";
+    const logoUrl = workshop?.logo_url || null;
+    const primary = workshop?.primary_color || "#D97706";
+    const background = workshop?.background_color || "#F8F7F4";
+
+    const manifest = {
+      name,
+      short_name: name,
+      description: "Digital Vehicle Service Record",
+      start_url: "/dashboard",
+      display: "standalone",
+      background_color: background,
+      theme_color: primary,
+      orientation: "portrait-primary",
+      icons: [
+        {
+          src: logoUrl || "/favicon.ico",
+          sizes: "192x192",
+          type: logoUrl ? "image/png" : "image/x-icon",
+          purpose: "any maskable",
+        },
+        {
+          src: logoUrl || "/favicon.ico",
+          sizes: "512x512",
+          type: logoUrl ? "image/png" : "image/x-icon",
+          purpose: "any maskable",
+        },
+      ],
+    };
+
+    res.setHeader("Content-Type", "application/manifest+json");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    return res.status(200).json(manifest);
+  } catch (err: any) {
+    res.setHeader("Content-Type", "application/manifest+json");
+    return res.status(200).json({
+      name: "Torque Log",
+      short_name: "Torque Log",
+      description: "Digital Vehicle Service Record",
+      start_url: "/dashboard",
+      display: "standalone",
+      background_color: "#F8F7F4",
+      theme_color: "#D97706",
+      orientation: "portrait-primary",
+      icons: [
+        { src: "/favicon.ico", sizes: "192x192", type: "image/x-icon", purpose: "any maskable" },
+        { src: "/favicon.ico", sizes: "512x512", type: "image/x-icon", purpose: "any maskable" },
+      ],
+    });
   }
-
-  const icons = iconUrl
-    ? [
-        { src: iconUrl, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-        { src: iconUrl, sizes: "512x512", type: "image/png", purpose: "any maskable" },
-      ]
-    : [
-        { src: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
-        { src: "/og-image.png", sizes: "1200x630", type: "image/png" },
-      ];
-
-  const startUrl = typeof slug === "string" ? `/vehicle/${slug}` : "/";
-
-  const manifest = {
-    name,
-    short_name: shortName,
-    description: "Digital Vehicle Service Record",
-    start_url: startUrl,
-    display: "standalone",
-    background_color: backgroundColor,
-    theme_color: themeColor,
-    orientation: "portrait",
-    scope: "/",
-    icons,
-  };
-
-  res.setHeader("Content-Type", "application/manifest+json");
-  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-  res.status(200).json(manifest);
 }

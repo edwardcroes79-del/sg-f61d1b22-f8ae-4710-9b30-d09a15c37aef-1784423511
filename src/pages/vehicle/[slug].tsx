@@ -28,16 +28,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   CalendarDays,
-  Download,
-  Share2,
   Bell,
   Loader2,
 } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
 
 function hexToHsl(hex: string): string {
   const clean = hex.replace("#", "");
@@ -109,7 +102,6 @@ export default function PublicVehiclePage() {
   const [records, setRecords] = useState<ServiceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
@@ -123,17 +115,9 @@ export default function PublicVehiclePage() {
     if (typeof window === "undefined") return;
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true);
 
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallEvent(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-
     if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window.navigator as any).standalone) {
       setShowIosHint(true);
     }
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   async function handleReminderSubmit(e: React.FormEvent) {
@@ -163,18 +147,6 @@ export default function PublicVehiclePage() {
       alert(err.message || "Could not save reminder preferences.");
     } finally {
       setReminderLoading(false);
-    }
-  }
-
-  async function handleInstall() {
-    if (installEvent) {
-      await installEvent.prompt();
-      const choice = await installEvent.userChoice;
-      if (choice.outcome === "accepted") {
-        setInstallEvent(null);
-      }
-    } else {
-      setShowIosHint(true);
     }
   }
 
@@ -254,9 +226,7 @@ export default function PublicVehiclePage() {
     <>
       <Head>
         <title>{defaultWorkshop.name} - {vehicle.make} {vehicle.model}</title>
-        <meta name="apple-mobile-web-app-title" content={defaultWorkshop.name} />
         <meta name="theme-color" content={defaultWorkshop.primary_color || "#D97706"} />
-        <link rel="manifest" href={`/api/manifest?slug=${vehicle.slug}`} />
         {defaultWorkshop.logo_url && (
           <>
             <link rel="apple-touch-icon" href={defaultWorkshop.logo_url} />
@@ -438,50 +408,6 @@ export default function PublicVehiclePage() {
             </div>
 
             <div className="space-y-4 sm:space-y-6">
-              {!isStandalone && (
-                <Card className="card-premium">
-                  <CardHeader className="p-4 sm:p-6 pb-2">
-                    <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                      <Download className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                      Save This Record
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      Add this vehicle to your home screen for quick access — no need to scan the QR code again.
-                    </p>
-                    {installEvent ? (
-                      <Button onClick={handleInstall} className="w-full h-12 text-base">
-                        <Download className="w-4 h-4 mr-2" />
-                        Install App
-                      </Button>
-                    ) : showIosHint ? (
-                      <div className="rounded-xl bg-muted p-3 sm:p-4 text-sm space-y-2">
-                        <p className="font-medium flex items-center gap-2">
-                          <Share2 className="w-4 h-4" />
-                          iPhone / iPad
-                        </p>
-                        <ol className="list-decimal list-inside text-muted-foreground space-y-1">
-                          <li>Tap the Share button in Safari.</li>
-                          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
-                          <li>Open the new icon anytime to see this service record.</li>
-                        </ol>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          Your browser will show an install prompt here when available. You can also add this page via your browser's menu.
-                        </p>
-                        <Button onClick={handleInstall} variant="outline" className="w-full h-12 text-base">
-                          <Download className="w-4 h-4 mr-2" />
-                          Add to Home Screen
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
               <Card className="card-premium">
                 <CardHeader className="p-4 sm:p-6 pb-2">
                   <CardTitle className="text-base sm:text-lg flex items-center gap-2">

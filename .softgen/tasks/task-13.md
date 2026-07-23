@@ -13,10 +13,10 @@ position: 13
 Users scanning a QR code reach `/vehicle/[slug]` without logging in. The current setup shows an "Add to Home Screen" prompt via the PWA manifest, which is meant for admin users. Public pages should not prompt installation.
 
 ## Checklist
-- [ ] Inspect where the PWA manifest link is registered.
-- [ ] Remove the manifest/service-worker registration from the public vehicle page.
-- [ ] Keep the PWA install capability for authenticated/admin routes.
-- [ ] Validate the build.
+- [x] Inspect where the PWA manifest link is registered.
+- [x] Remove the manifest/service-worker registration from the public vehicle page.
+- [x] Keep the PWA install capability for authenticated/admin routes.
+- [x] Validate the build.
 
 ## Acceptance
 - Scanning a vehicle QR code no longer shows an "Add to Home Screen" prompt.

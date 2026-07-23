@@ -86,11 +86,6 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
     try {
       const data = await signIn(email, password);
 
-      if (data.session) {
-        router.push("/dashboard");
-        return;
-      }
-
       const factorsList = await getMfaFactors();
       const verifiedFactor = factorsList.totp?.find((f: any) => f.status === "verified");
 
@@ -102,6 +97,10 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
         setMode("mfa");
         setLoading(false);
         return;
+      }
+
+      if (!data.session) {
+        throw new Error("Could not sign in. Please try again.");
       }
 
       router.push("/dashboard");

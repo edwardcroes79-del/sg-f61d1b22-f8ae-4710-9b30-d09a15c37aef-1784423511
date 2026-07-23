@@ -13,12 +13,12 @@ position: 14
 Admins need to select multiple vehicles and print their QR codes on a single page, optimized for paper (e.g. A4 sticker sheet).
 
 ## Checklist
-- [ ] Inspect existing QR code page and vehicle service.
-- [ ] Add vehicle selection UI with "Select all" and per-row checkboxes.
-- [ ] Generate QR codes for selected vehicles using their public slug.
-- [ ] Build a print-optimized layout (multiple QR codes per page with vehicle info).
-- [ ] Add print button using window.print().
-- [ ] Validate build.
+- [x] Inspect existing QR code page and vehicle service.
+- [x] Add vehicle selection UI with "Select all" and per-row checkboxes.
+- [x] Generate QR codes for selected vehicles using their public slug.
+- [x] Build a print-optimized layout (multiple QR codes per page with vehicle info).
+- [x] Add print button using window.print().
+- [x] Validate build.
 
 ## Acceptance
 - Admin can select vehicles and print a page of QR codes.

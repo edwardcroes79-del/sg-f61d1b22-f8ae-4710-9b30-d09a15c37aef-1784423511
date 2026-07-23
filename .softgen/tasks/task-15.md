@@ -13,11 +13,11 @@ position: 15
 Reminders should be sent 1 day and 1 week before the next service date, but only to customers whose email is registered in the system. Currently reminders rely on a public subscription form. We should source emails from the customers table.
 
 ## Checklist
-- [ ] Inspect current reminder API and preferences table.
-- [ ] Change reminder logic to pull customer emails from `customers.email`.
-- [ ] Remove dependency on public `reminder_preferences` for cron-driven reminders (keep public opt-out if needed).
-- [ ] Ensure 1-day and 1-week reminders are sent once per due date.
-- [ ] Validate build.
+- [x] Inspect current reminder API and preferences table.
+- [x] Change reminder logic to pull customer emails from `customers.email`.
+- [x] Remove dependency on public `reminder_preferences` for cron-driven reminders.
+- [x] Ensure 1-day and 1-week reminders are sent once per due date using delivery log.
+- [x] Validate build.
 
 ## Acceptance
 - Cron/send-reminders sends emails to registered customer emails only.

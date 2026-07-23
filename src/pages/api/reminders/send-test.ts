@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: "SMTP is not configured" });
     }
 
-    const { data: row, error: joinError } = await admin
+    const { data, error: joinError } = await admin
       .from("vehicles")
       .select(`
         id,
@@ -47,11 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customer:customers!customer_id (id, full_name, email)
       `)
       .eq("id", vehicle_id)
-      .returns<VehicleWithCustomer>()
       .single();
 
     if (joinError) throw joinError;
-    if (!row) return res.status(404).json({ error: "Vehicle not found" });
+    if (!data) return res.status(404).json({ error: "Vehicle not found" });
+
+    const row = data as unknown as VehicleWithCustomer;
     if (!row.customer?.email) return res.status(400).json({ error: "Customer has no registered email" });
 
     const customerEmail = row.customer.email;

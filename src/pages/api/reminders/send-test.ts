@@ -3,6 +3,20 @@ import nodemailer from "nodemailer";
 import { getSupabaseAdmin } from "@/integrations/supabase/admin";
 import { getWorkshopConfig, formatDateLocal } from "./send";
 
+interface VehicleWithCustomer {
+  id: string;
+  registration_number: string;
+  make: string;
+  model: string;
+  next_service_date: string | null;
+  next_service_mileage: number | null;
+  customer: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") {
@@ -30,43 +44,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         model,
         next_service_date,
         next_service_mileage,
-        customer:customers (id, full_name, email)
+        customer:customers!customer_id (id, full_name, email)
       `)
       .eq("id", vehicle_id)
+      .returns<VehicleWithCustomer>()
       .single();
 
     if (joinError) throw joinError;
     if (!row) return res.status(404).json({ error: "Vehicle not found" });
     if (!row.customer?.email) return res.status(400).json({ error: "Customer has no registered email" });
 
-    const customerEmail: string = row.customer.email;
-    const fullName: string | null = row.customer.full_name || null;
+    const customerEmail = row.customer.email;
+    const fullName = row.customer.full_name;
 
-    const vehicle = {
-      id: row.id,
-      registration_number: row.registration_number,
-      make: row.make,
-      model: row.model,
-      next_service_date: row.next_service_date,
-      next_service_mileage: row.next_service_mileage,
-    };
-
-    const nextDateText = vehicle.next_service_date ? formatDateLocal(vehicle.next_service_date) : "Not scheduled";
-    const mileageText = vehicle.next_service_mileage
-      ? `Next service mileage: ${vehicle.next_service_mileage.toLocaleString()} km`
+    const nextDateText = row.next_service_date ? formatDateLocal(row.next_service_date) : "Not scheduled";
+    const mileageText = row.next_service_mileage
+      ? `Next service mileage: ${row.next_service_mileage.toLocaleString()} km`
       : "";
 
     const text = config.template
-      .replace(/{{make}}/g, vehicle.make)
-      .replace(/{{model}}/g, vehicle.model)
-      .replace(/{{registration_number}}/g, vehicle.registration_number)
+      .replace(/{{make}}/g, row.make)
+      .replace(/{{model}}/g, row.model)
+      .replace(/{{registration_number}}/g, row.registration_number)
       .replace(/{{next_service_date}}/g, nextDateText)
       .replace(/{{next_service_mileage}}/g, mileageText)
       .replace(/{{lead_time}}/g, "TEST — this is a manual test")
       .replace(/{{workshop_name}}/g, config.name)
       .replace(/{{customer_name}}/g, fullName || "there");
 
-    const subject = `[TEST] Service reminder for ${vehicle.make} ${vehicle.model} (${vehicle.registration_number})`;
+    const subject = `[TEST] Service reminder for ${row.make} ${row.model} (${row.registration_number})`;
 
     const transporter = nodemailer.createTransport({
       host: config.smtp.host,
@@ -83,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     await admin.from("reminder_deliveries").insert({
-      vehicle_id: vehicle.id,
+      vehicle_id: row.id,
       email: customerEmail,
       lead_time: "test",
       status: "sent",

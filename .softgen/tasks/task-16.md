@@ -1,6 +1,6 @@
 ---
 title: Manual test reminder button on vehicle page
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [reminders, vehicle, dashboard, testing]

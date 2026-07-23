@@ -26,7 +26,7 @@ interface WorkshopWithTemplate {
   reminder_email_template: string | null;
 }
 
-async function getWorkshopConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ smtp: { host: string; port: number; user: string; pass: string; from: string } | null; name: string; template: string }> {
+export async function getWorkshopConfig(admin: ReturnType<typeof getSupabaseAdmin>): Promise<{ smtp: { host: string; port: number; user: string; pass: string; from: string } | null; name: string; template: string }> {
   const envConfig = {
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
@@ -61,7 +61,7 @@ async function getWorkshopConfig(admin: ReturnType<typeof getSupabaseAdmin>): Pr
   };
 }
 
-function formatDateLocal(dateString: string): string {
+export function formatDateLocal(dateString: string): string {
   const d = new Date(dateString);
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }

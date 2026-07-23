@@ -393,6 +393,7 @@ export type Database = {
       }
       workshops: {
         Row: {
+          background_color: string | null
           background_image_url: string | null
           contact_address: string | null
           contact_email: string | null
@@ -419,6 +420,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          background_color?: string | null
           background_image_url?: string | null
           contact_address?: string | null
           contact_email?: string | null
@@ -445,6 +447,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          background_color?: string | null
           background_image_url?: string | null
           contact_address?: string | null
           contact_email?: string | null

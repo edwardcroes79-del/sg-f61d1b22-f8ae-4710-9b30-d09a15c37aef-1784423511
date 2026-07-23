@@ -9,9 +9,9 @@ interface SEOProps {
 
 // SEO elements that can be used in _document.tsx (returns JSX without Head wrapper)
 export function SEOElements({
-  title = "Magic Services",
-  description = "Welcome to my app",
-  image = "/og-image.png",
+  title = "Ennia Service",
+  description = "Ennia Service",
+  image,
   url,
 }: SEOProps) {
   return (

@@ -1,0 +1,1 @@
+ALTER TABLE workshops ADD COLUMN IF NOT EXISTS background_color text NULL DEFAULT '#F8F7F4';

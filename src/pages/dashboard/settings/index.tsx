@@ -11,6 +11,7 @@ import { getWorkshop, uploadWorkshopLogo, type Workshop } from "@/services/works
 import { useWorkshop } from "@/contexts/WorkshopContext";
 import { updateEmail, updatePassword } from "@/services/authService";
 import { Palette, Building2, Phone, Mail, Globe, ImagePlus, Facebook, Instagram, Twitter, Linkedin, Loader2, Lock, UserCog, Bell, Send, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface SmtpStatus {
   host: string;
@@ -56,6 +57,8 @@ export default function SettingsPage() {
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loadingDeliveries, setLoadingDeliveries] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
+  const [clearingLog, setClearingLog] = useState(false);
+  const [showClearLogDialog, setShowClearLogDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const smtpStatus: SmtpStatus = {
@@ -181,6 +184,22 @@ export default function SettingsPage() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setUpdatingPassword(false);
+    }
+  }
+
+  async function handleClearLog() {
+    setClearingLog(true);
+    try {
+      const res = await fetch("/api/reminders/log", { method: "DELETE", headers: { "Content-Type": "application/json" } });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Could not clear log");
+      toast({ title: "Log cleared", description: `${json.deleted || 0} old entries removed.` });
+      await fetchDeliveries();
+      setShowClearLogDialog(false);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setClearingLog(false);
     }
   }
 
@@ -343,11 +362,20 @@ export default function SettingsPage() {
 
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="card-premium md:col-span-2">
-              <CardHeader>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Send className="w-4 h-4 text-primary" />
                   Delivery Log
                 </CardTitle>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowClearLogDialog(true)}
+                  disabled={loadingDeliveries || deliveries.length === 0}
+                >
+                  Clear Old Log
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
@@ -533,6 +561,24 @@ export default function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      <Dialog open={showClearLogDialog} onOpenChange={setShowClearLogDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear Reminder Delivery Log?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete all reminder delivery log entries. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowClearLogDialog(false)} disabled={clearingLog}>Cancel</Button>
+            <Button variant="destructive" onClick={handleClearLog} disabled={clearingLog}>
+              {clearingLog && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {clearingLog ? "Clearing..." : "Clear Log"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

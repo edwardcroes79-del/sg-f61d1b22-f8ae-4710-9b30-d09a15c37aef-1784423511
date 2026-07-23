@@ -140,124 +140,128 @@ export default function QrCodesPage() {
   }
 
   return (
-    <DashboardLayout title="QR Codes">
-      <div className="space-y-6 print:hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="text-muted-foreground">Generate and print vehicle QR codes</p>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard/vehicles">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Vehicles
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <Card className="card-premium">
-          <CardHeader>
-            <CardTitle className="text-base">Select Vehicles</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by plate, make, model, or owner..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+    <>
+      <DashboardLayout title="QR Codes">
+        <div className="space-y-6">
+          <div className="space-y-6 print:hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <p className="text-muted-foreground">Generate and print vehicle QR codes</p>
+              <div className="flex gap-2">
+                <Button variant="outline" asChild>
+                  <Link href="/dashboard/vehicles">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Vehicles
+                  </Link>
+                </Button>
               </div>
-              <Button variant="outline" onClick={toggleSelectAll}>
-                {allSelected ? <Check className="w-4 h-4 mr-2" /> : null}
-                {allSelected ? "Deselect All" : "Select All"}
-              </Button>
-              <Button onClick={handlePrint} disabled={selectedItems.length === 0}>
-                <Printer className="w-4 h-4 mr-2" />
-                Print {selectedItems.length > 0 && `(${selectedItems.length})`}
-              </Button>
             </div>
 
-            {loading ? (
-              <div className="py-12 text-center text-muted-foreground">Loading vehicles...</div>
-            ) : filtered.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                <p>No vehicles found</p>
-                <Link href="/dashboard/vehicles/new" className="text-primary hover:underline text-sm mt-2 inline-block">
-                  Register a vehicle
-                </Link>
-              </div>
-            ) : (
-              <div className="border rounded-xl overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
-                      </TableHead>
-                      <TableHead>Vehicle</TableHead>
-                      <TableHead>Registration</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((vehicle) => (
-                      <TableRow key={vehicle.id}>
-                        <TableCell>
-                          <Checkbox checked={selected.has(vehicle.id)} onCheckedChange={() => toggleSelect(vehicle.id)} aria-label={`Select ${vehicle.registration_number}`} />
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">{vehicle.make} {vehicle.model}</span>
-                          <p className="text-xs text-muted-foreground">{vehicle.year || "—"}</p>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{vehicle.registration_number}</TableCell>
-                        <TableCell>{vehicle.customer?.full_name || "—"}</TableCell>
-                        <TableCell className="text-right">
-                          <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>
-                            <Button variant="ghost" size="sm">
-                              <QrCode className="w-4 h-4 mr-2" />
-                              Single
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
+            <Card className="card-premium">
+              <CardHeader>
+                <CardTitle className="text-base">Select Vehicles</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by plate, make, model, or owner..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <Button variant="outline" onClick={toggleSelectAll}>
+                    {allSelected ? <Check className="w-4 h-4 mr-2" /> : null}
+                    {allSelected ? "Deselect All" : "Select All"}
+                  </Button>
+                  <Button onClick={handlePrint} disabled={selectedItems.length === 0}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print {selectedItems.length > 0 && `(${selectedItems.length})`}
+                  </Button>
+                </div>
+
+                {loading ? (
+                  <div className="py-12 text-center text-muted-foreground">Loading vehicles...</div>
+                ) : filtered.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground">
+                    <p>No vehicles found</p>
+                    <Link href="/dashboard/vehicles/new" className="text-primary hover:underline text-sm mt-2 inline-block">
+                      Register a vehicle
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="border rounded-xl overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" />
+                          </TableHead>
+                          <TableHead>Vehicle</TableHead>
+                          <TableHead>Registration</TableHead>
+                          <TableHead>Owner</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filtered.map((vehicle) => (
+                          <TableRow key={vehicle.id}>
+                            <TableCell>
+                              <Checkbox checked={selected.has(vehicle.id)} onCheckedChange={() => toggleSelect(vehicle.id)} aria-label={`Select ${vehicle.registration_number}`} />
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-medium">{vehicle.make} {vehicle.model}</span>
+                              <p className="text-xs text-muted-foreground">{vehicle.year || "—"}</p>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">{vehicle.registration_number}</TableCell>
+                            <TableCell>{vehicle.customer?.full_name || "—"}</TableCell>
+                            <TableCell className="text-right">
+                              <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>
+                                <Button variant="ghost" size="sm">
+                                  <QrCode className="w-4 h-4 mr-2" />
+                                  Single
+                                </Button>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {selectedItems.length > 0 && (
+              <Card className="card-premium">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-primary" />
+                      Print Preview
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">{selectedItems.length} QR code(s) selected</p>
+                  </div>
+                  <Button onClick={handlePrint}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print Now
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {selectedItems.map(({ vehicle, url }) => (
+                      <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} />
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </DashboardLayout>
 
-        {selectedItems.length > 0 && (
-          <Card className="card-premium">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-primary" />
-                  Print Preview
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">{selectedItems.length} QR code(s) selected</p>
-              </div>
-              <Button onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" />
-                Print Now
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {selectedItems.map(({ vehicle, url }) => (
-                  <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <div id="print-content" className="hidden print:block">
+      <div className="hidden print:block fixed inset-0 bg-white z-50 p-8">
         <style>{`
           @page {
             size: A4 landscape;
@@ -350,6 +354,6 @@ export default function QrCodesPage() {
           ))}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

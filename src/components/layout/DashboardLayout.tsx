@@ -69,20 +69,22 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex" style={brandStyle}>
-      <div className="hidden md:block">
+      <div className="hidden md:block print:hidden">
         <Sidebar />
       </div>
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
+        <div className="print:hidden">
+          <Header />
+        </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto print:p-0 print:bg-white">
           {title && (
-            <div className="mb-4 md:mb-6">
+            <div className="mb-4 md:mb-6 print:hidden">
               <h1 className="text-xl md:text-2xl font-heading font-semibold">{title}</h1>
             </div>
           )}
-          <div className="animate-fade-in max-w-7xl mx-auto">{children}</div>
+          <div className="animate-fade-in max-w-7xl mx-auto print:max-w-none print:m-0">{children}</div>
         </main>
-        <footer className="border-t bg-card/50 px-4 md:px-6 py-4 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-2">
+        <footer className="border-t bg-card/50 px-4 md:px-6 py-4 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-2 print:hidden">
           <span>© {new Date().getFullYear()} {workshop?.name || "Torque Log"}</span>
           <span>{workshop?.powered_by || "Powered by Torque Log"}</span>
         </footer>

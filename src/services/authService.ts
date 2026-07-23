@@ -68,7 +68,9 @@ export async function enrollMfaFactor() {
 }
 
 export async function verifyMfaEnrollment(factorId: string, code: string) {
-  const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId: "", code });
+  const challenge = await supabase.auth.mfa.challenge({ factorId });
+  if (challenge.error) throw challenge.error;
+  const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code });
   if (error) throw error;
   return data;
 }

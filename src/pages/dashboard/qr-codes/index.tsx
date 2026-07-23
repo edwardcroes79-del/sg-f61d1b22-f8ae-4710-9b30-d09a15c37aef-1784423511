@@ -61,6 +61,11 @@ export default function QrCodesPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showPrint, setShowPrint] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -226,22 +231,24 @@ export default function QrCodesPage() {
         </div>
       </DashboardLayout>
 
-      <div id="qr-print-portal" className={showPrint ? "print-open" : "print-closed"} aria-hidden={!showPrint}>
-        <div className="print-sheet">
-          <div className="print-sheet-header">
-            <div>
-              <h1>{workshop?.name || "Torque Log"}</h1>
-              <p>Vehicle QR Codes — {selectedItems.length} total</p>
+      {mounted && (
+        <div id="qr-print-portal" className={showPrint ? "print-open" : "print-closed"} aria-hidden={!showPrint}>
+          <div className="print-sheet">
+            <div className="print-sheet-header">
+              <div>
+                <h1>{workshop?.name || "Torque Log"}</h1>
+                <p>Vehicle QR Codes — {selectedItems.length} total</p>
+              </div>
+              {workshop?.logo_url && <img src={workshop.logo_url} alt="" />}
             </div>
-            {workshop?.logo_url && <img src={workshop.logo_url} alt="" />}
-          </div>
-          <div className="print-sheet-grid">
-            {selectedItems.map(({ vehicle, url }) => (
-              <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} size={120} />
-            ))}
+            <div className="print-sheet-grid">
+              {selectedItems.map(({ vehicle, url }) => (
+                <VehicleQrCard key={vehicle.id} vehicle={vehicle} url={url} size={120} />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <style>{`
         .print-closed {

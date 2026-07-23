@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import type { GetServerSideProps } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { signIn, resetPassword, verifyMfaChallenge } from "@/services/authService";
+import { signIn, resetPassword, verifyMfaChallenge, getMfaFactors } from "@/services/authService";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,12 +91,13 @@ export default function LoginPage({ brand: serverBrand }: { brand: typeof defaul
         return;
       }
 
-      const factors = data.user?.factors;
-      if (factors && factors.length > 0) {
-        const factor = factors[0];
-        const challenge = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      const factorsList = await getMfaFactors();
+      const verifiedFactor = factorsList.totp?.find((f: any) => f.status === "verified");
+
+      if (verifiedFactor) {
+        const challenge = await supabase.auth.mfa.challenge({ factorId: verifiedFactor.id });
         if (challenge.error) throw challenge.error;
-        setMfaFactorId(factor.id);
+        setMfaFactorId(verifiedFactor.id);
         setMfaChallengeId(challenge.data.id);
         setMode("mfa");
         setLoading(false);
